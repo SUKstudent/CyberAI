@@ -1,7 +1,5 @@
-streamlit
-pyttsx3
+pandas
 scikit-learn
 joblib
-pandas
-SpeechRecognition
-pyaudio
+streamlit
+pyttsx3
