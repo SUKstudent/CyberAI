@@ -1,8 +1,7 @@
 streamlit
-gtts
+pyttsx3
 scikit-learn
 joblib
 pandas
-pyttsx3
 SpeechRecognition
 pyaudio
