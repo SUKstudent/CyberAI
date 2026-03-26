@@ -4,12 +4,13 @@ import joblib
 import io
 from gtts import gTTS
 from PIL import Image
+import random
 from utils import scenarios
 
 # ---------- Display Logo ----------
 try:
     logo = Image.open("ai_teacher_logo.jpeg")  # JPEG logo
-    st.image(logo, width=150)
+    st.image(logo, width=250)  # Increased width from 150 → 250
 except Exception as e:
     st.warning(f"Logo not found or failed to load: {e}")
 
@@ -30,19 +31,10 @@ try:
 except Exception as e:
     st.error(f"⚠️ Model not found or error loading: {e}")
 
-# ---------- Prediction function with rule-based phishing override ----------
 def predict_category(text):
-    text_lower = text.lower()
-    phishing_keywords = ["click", "verify", "login", "account", "password", "link", "suspend", "urgent"]
-    
-    # Rule-based override for phishing
-    if any(word in text_lower for word in phishing_keywords):
-        return "phishing"
-    
     if not model_loaded:
         speak_streamlit("Model not loaded. Cannot predict.", lang_code="en")
         return "unknown"
-    
     return model.predict([text])[0]
 
 # ---------- Feedback dictionary ----------
@@ -143,24 +135,18 @@ elif page=="Demo / Analyze":
     st.header("🔍 Demo / Manual Message Analysis")
     demo_mode = st.checkbox("💡 Demo Mode")
 
-    demo_messages = {
-        "phishing":"Click this suspicious link to claim prize",
-        "malware":"Install this app to get reward",
-        "ransomware":"Your files locked, pay to unlock",
-        "social_engineering":"Call asking OTP for verification",
-        "password_attack":"Someone asking for password",
-        "otp_fraud":"Someone asked my OTP",
-        "lottery_scam":"You won a lottery you never entered",
-        "fake_app":"Install this fake banking app",
-        "financial_fraud":"Bank transfer requested from unknown",
-        "spyware_adware":"App is secretly tracking your device"
-    }
+    demo_messages = [
+        "Click this suspicious link to claim prize",
+        "Install this app to get reward",
+        "Your files locked, pay to unlock",
+        "Call asking OTP for verification",
+        "Someone asking for password",
+        "You won a lottery you never entered"
+    ]
 
-    attack_type = st.selectbox("🔎 Select Demo Attack Type", list(demo_messages.keys()))
-
-    # Show demo message in text area but prediction is based on actual content
+    # Demo mode → pick random message
     if demo_mode:
-        user_input = demo_messages[attack_type]
+        user_input = random.choice(demo_messages)
         st.text_area("📩 Message content", value=user_input, height=100)
     else:
         user_input = st.text_area("📩 Enter message / call content", height=100)
@@ -170,6 +156,7 @@ elif page=="Demo / Analyze":
         check = st.button("🔍 Analyze")
     with col2:
         clear = st.button("🧹 Clear")
+
     if clear:
         st.experimental_rerun()
 
@@ -183,5 +170,6 @@ elif page=="Demo / Analyze":
                 category,
                 {"English":"Be cautious","Hindi":"सतर्क रहें","Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"}
             )[lang]
+
             st.error(feedback)
             speak_streamlit(feedback, lang_code=lang_code)
