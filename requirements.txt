@@ -1,5 +1,5 @@
 pandas
 scikit-learn
-joblib
 streamlit
-pyttsx3
+joblib
+gTTS
