@@ -3,9 +3,17 @@ import streamlit as st
 import joblib
 import io
 from gtts import gTTS
+from PIL import Image
 from utils import scenarios
 
-# ---------- Function to play audio ----------
+# ---------- Display Logo ----------
+try:
+    logo = Image.open("ai_teacher_logo.jpeg")  # JPEG logo
+    st.image(logo, width=150)
+except Exception as e:
+    st.warning(f"Logo not found or failed to load: {e}")
+
+# ---------- Audio function ----------
 def speak_streamlit(text, lang_code="en"):
     tts = gTTS(text=text, lang=lang_code)
     mp3_fp = io.BytesIO()
@@ -42,108 +50,115 @@ feedback_dict = {
     "spyware_adware":{"English":"⚠️ Spyware/Adware! Be careful","Hindi":"⚠️ स्पाईवेयर/एडवेयर! सावधान रहें","Kannada":"⚠️ ಸ್ಪೈವೇರ್/ಆಡ್ವೇರ್! ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"}
 }
 
-# ---------- Streamlit UI ----------
-st.set_page_config(page_title="AI Cyber Safety Teacher", page_icon="🛡️")
-st.title("🛡️ AI Cyber Safety Teacher")
-
-# ---------- Language Selection ----------
+# ---------- Language selection ----------
 lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
 lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
 lang_code = lang_map_code[lang]
 
-# ---------- Welcome Audio ----------
-welcome_msg = {
-    "English":"Welcome to AI Cyber Safety Teacher! Learn how to stay safe online.",
-    "Hindi":"AI साइबर सुरक्षा शिक्षक में आपका स्वागत है! ऑनलाइन सुरक्षित रहें।",
-    "Kannada":"AI ಸೈಬರ್ ಸೆಕ್ಯುರಿಟಿ ಟೀಚರ್‌ಗೆ ಸ್ವಾಗತ! ಆನ್‌ಲೈನ್ ಸುರಕ್ಷಿತವಾಗಿ ಇರಲು ಕಲಿಯಿರಿ."
-}
-speak_streamlit(welcome_msg[lang], lang_code=lang_code)
+# ---------- Step navigation ----------
+st.sidebar.header("📌 Navigation")
+page = st.sidebar.radio("Go to:", ["Welcome","Cyber Attack Details","Demo / Analyze"])
 
-st.markdown("---")
+# ---------- Welcome Page ----------
+if page=="Welcome":
+    st.header("👋 Welcome to AI Cyber Safety Teacher")
+    welcome_msg = {
+        "English":"Welcome to AI Cyber Safety Teacher! Learn how to stay safe online.",
+        "Hindi":"AI साइबर सुरक्षा शिक्षक में आपका स्वागत है! ऑनलाइन सुरक्षित रहें।",
+        "Kannada":"AI ಸೈಬರ್ ಸೆಕ್ಯುರಿಟಿ ಟೀಚರ್‌ಗೆ ಸ್ವಾಗತ! ಆನ್‌ಲೈನ್ ಸುರಕ್ಷಿತವಾಗಿ ಇರಲು ಕಲಿಯಿರಿ."
+    }
+    st.write(welcome_msg[lang])
+    speak_streamlit(welcome_msg[lang], lang_code=lang_code)
 
-# ---------- Next Page: Explain Attack Types ----------
-st.header("📌 Cyber Attack Types")
-attack_details = {
-    "phishing": "Messages trying to steal your passwords or personal info via fake links.",
-    "malware": "Software that harms your device or steals data.",
-    "ransomware": "Locks your files and demands money to unlock.",
-    "social_engineering": "Tricks people to share confidential info.",
-    "password_attack": "Attempts to guess or steal your passwords.",
-    "otp_fraud": "Fraud involving stealing your OTP.",
-    "lottery_scam": "Fake lottery messages trying to steal info or money.",
-    "fake_app": "Apps pretending to be real to steal data.",
-    "financial_fraud": "Fraud related to bank transfers or money.",
-    "spyware_adware": "Apps secretly tracking or showing unwanted ads."
-}
-for key, desc in attack_details.items():
-    st.write(f"• {key.replace('_',' ').title()}: {desc}")
-    speak_streamlit(f"{key.replace('_',' ').title()}: {desc}", lang_code=lang_code)
+# ---------- Cyber Attack Details ----------
+elif page=="Cyber Attack Details":
+    st.header("📌 Cyber Attack Types")
+    attack_details = {
+        "phishing": {
+            "English": "Messages trying to steal your passwords or personal info via fake links.",
+            "Hindi": "संदेश जो आपके पासवर्ड या व्यक्तिगत जानकारी को नकली लिंक के माध्यम से चुराने की कोशिश करते हैं।",
+            "Kannada": "ತಪ್ಪು ಲಿಂಕ್ ಮೂಲಕ ನಿಮ್ಮ ಪಾಸ್ವರ್ಡ್ ಅಥವಾ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ಕದಿಯಲು ಪ್ರಯತ್ನಿಸುವ ಸಂದೇಶಗಳು."
+        },
+        "malware": {
+            "English": "Software that harms your device or steals data.",
+            "Hindi": "सॉफ़्टवेयर जो आपके डिवाइस को नुकसान पहुंचाता है या डेटा चुराता है।",
+            "Kannada": "ನಿಮ್ಮ ಸಾಧನಕ್ಕೆ ಹಾನಿ ಮಾಡುವ ಅಥವಾ ಡೇಟಾವನ್ನು ಕದಿಯುವ ಸಾಫ್ಟ್‌ವೇರ್."
+        },
+        "ransomware": {
+            "English": "Locks your files and demands money to unlock.",
+            "Hindi": "आपकी फाइलों को लॉक करता है और अनलॉक करने के लिए पैसे मांगता है।",
+            "Kannada": "ನಿಮ್ಮ ಫೈಲ್‌ಗಳನ್ನು ಲಾಕ್ ಮಾಡಿ ಅವುಗಳನ್ನು ಅನ್ಲಾಕ್ ಮಾಡಲು ಹಣವನ್ನು ಕೇಳುತ್ತದೆ."
+        },
+        "social_engineering": {
+            "English": "Tricks people to share confidential info.",
+            "Hindi": "लोगों को गोपनीय जानकारी साझा करने के लिए धोखा देता है।",
+            "Kannada": "ಗುಪ್ತ ಮಾಹಿತಿಯನ್ನು ಹಂಚಿಕೊಳ್ಳಲು ಜನರನ್ನು ಮೋಸ ಮಾಡುತ್ತದೆ."
+        },
+        "password_attack": {
+            "English": "Attempts to guess or steal your passwords.",
+            "Hindi": "आपके पासवर्ड को अनुमान लगाने या चुराने का प्रयास।",
+            "Kannada": "ನಿಮ್ಮ ಪಾಸ್ವರ್ಡ್ ಅನ್ನು ಊಹಿಸಲು ಅಥವಾ ಕದಿಯಲು ಪ್ರಯತ್ನಿಸುತ್ತದೆ."
+        },
+        "otp_fraud": {
+            "English": "Fraud involving stealing your OTP.",
+            "Hindi": "आपके OTP को चुराने से संबंधित धोखाधड़ी।",
+            "Kannada": "ನಿಮ್ಮ OTP ಅನ್ನು ಕದಿಯುವ ಸಂಬಂಧಿತ ಮೋಸ."
+        },
+        "lottery_scam": {
+            "English": "Fake lottery messages trying to steal info or money.",
+            "Hindi": "नकली लॉटरी संदेश जो जानकारी या पैसा चुराने की कोशिश करते हैं।",
+            "Kannada": "ಮಾಹಿತಿ ಅಥವಾ ಹಣವನ್ನು ಕದಿಯಲು ಪ್ರಯತ್ನಿಸುವ ನಕಲಿ ಲಾಟರಿ ಸಂದೇಶಗಳು."
+        },
+        "fake_app": {
+            "English": "Apps pretending to be real to steal data.",
+            "Hindi": "ऐसे ऐप्स जो डेटा चोरी करने के लिए असली होने का नाटक करते हैं।",
+            "Kannada": "ಡೇಟಾವನ್ನು ಕದಿಯಲು ನಿಜವಾಗಿರುವಂತೆ ನಟಿಸುತ್ತಿರುವ ಅಪ್ಲಿಕೇಶನ್‌ಗಳು."
+        },
+        "financial_fraud": {
+            "English": "Fraud related to bank transfers or money.",
+            "Hindi": "बैंक ट्रांसफर या पैसे से संबंधित धोखाधड़ी।",
+            "Kannada": "ಬ್ಯಾಂಕ್ ವರ್ಗಾವಣೆ ಅಥವಾ ಹಣಕ್ಕೆ ಸಂಬಂಧಿಸಿದ ಮೋಸ."
+        },
+        "spyware_adware": {
+            "English": "Apps secretly tracking or showing unwanted ads.",
+            "Hindi": "ऐप्स जो गुप्त रूप से ट्रैक करते हैं या अवांछित विज्ञापन दिखाते हैं।",
+            "Kannada": "ಅಪ್ಲಿಕೇಶನ್‌ಗಳು ಗುಪ್ತವಾಗಿ ಟ್ರ್ಯಾಕ್ ಮಾಡುತ್ತವೆ ಅಥವಾ ಅಗತ್ಯವಿಲ್ಲದ ಜಾಹಿರಾತುಗಳನ್ನು ತೋರಿಸುತ್ತವೆ."
+        }
+    }
+    for key, desc_dict in attack_details.items():
+        st.write(f"• {key.replace('_',' ').title()}: {desc_dict[lang]}")
+        speak_streamlit(f"{key.replace('_',' ').title()}: {desc_dict[lang]}", lang_code=lang_code)
 
-st.markdown("---")
+# ---------- Demo / Manual Analysis ----------
+elif page=="Demo / Analyze":
+    st.header("🔍 Demo / Manual Message Analysis")
+    demo_mode = st.checkbox("💡 Demo Mode")
+    demo_messages = {
+        "phishing":"Click this suspicious link to claim prize",
+        "malware":"Install this app to get reward",
+        "ransomware":"Your files locked, pay to unlock",
+        "social_engineering":"Call asking OTP for verification",
+        "password_attack":"Someone asking for password",
+        "otp_fraud":"Someone asked my OTP",
+        "lottery_scam":"You won a lottery you never entered",
+        "fake_app":"Install this fake banking app",
+        "financial_fraud":"Bank transfer requested from unknown",
+        "spyware_adware":"App is secretly tracking your device"
+    }
+    attack_type = st.selectbox("🔎 Select Demo Attack Type", list(demo_messages.keys()))
+    user_input = demo_messages[attack_type] if demo_mode else st.text_area("📩 Enter message / call content")
 
-# ---------- Demo / User Input ----------
-demo_mode = st.checkbox("💡 Demo Mode")
-demo_messages = {
-    "phishing":"Click this suspicious link to claim prize",
-    "malware":"Install this app to get reward",
-    "ransomware":"Your files locked, pay to unlock",
-    "social_engineering":"Call asking OTP for verification",
-    "password_attack":"Someone asking for password",
-    "otp_fraud":"Someone asked my OTP",
-    "lottery_scam":"You won a lottery you never entered",
-    "fake_app":"Install this fake banking app",
-    "financial_fraud":"Bank transfer requested from unknown",
-    "spyware_adware":"App is secretly tracking your device"
-}
-attack_type = st.selectbox("🔎 Select Demo Attack Type", list(demo_messages.keys()))
-user_input = demo_messages[attack_type] if demo_mode else st.text_area("📩 Enter message / call content")
+    col1,col2 = st.columns(2)
+    with col1: check = st.button("🔍 Analyze")
+    with col2: clear = st.button("🧹 Clear")
+    if clear: st.experimental_rerun()
 
-col1,col2 = st.columns(2)
-with col1: check = st.button("🔍 Analyze")
-with col2: clear = st.button("🧹 Clear")
-if clear: st.experimental_rerun()
-
-if check or demo_mode:
-    if user_input.strip()=="":
-        st.warning("⚠️ Please enter some text")
-        speak_streamlit("Please enter some text to analyze.", lang_code=lang_code)
-    else:
-        category = predict_category(user_input)
-        feedback = feedback_dict.get(category, {"English":"Be cautious","Hindi":"सतर्क रहें","Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"})[lang]
-        st.error(feedback)
-        speak_streamlit(feedback, lang_code=lang_code)
-
-st.markdown("---")
-
-# ---------- Cyber Awareness Tips ----------
-st.header("📚 Cyber Awareness Tips")
-tips = {
-    "English":["Never share OTP or PIN","Avoid unknown links","Banks never ask passwords","Install apps from trusted sources","Verify messages before clicking"],
-    "Hindi":["OTP या PIN कभी साझा न करें","अज्ञात लिंक से बचें","बैंक कभी पासवर्ड नहीं मांगते","विश्वसनीय स्रोत से ऐप इंस्टॉल करें","संदेश सत्यापित करें"],
-    "Kannada":["OTP ಅಥವಾ PIN ಯಾರಿಗೂ ಹಂಚಬೇಡಿ","ಅಪರಿಚಿತ ಲಿಂಕ್ ತಪ್ಪಿಸಿ","ಬ್ಯಾಂಕ್ ಪಾಸ್‌ವರ್ಡ್ ಕೇಳುವುದಿಲ್ಲ","ನಂಬನೀಯ ಮೂಲದಿಂದ ಅಪ್ಲಿಕೇಶನ್ ಸ್ಥಾಪಿಸಿ","ಸಂದೇಶ ಪರಿಶೀಲಿಸಿ"]
-}
-for tip in tips[lang]:
-    st.write("•", tip)
-    speak_streamlit(tip, lang_code=lang_code)
-
-st.markdown("---")
-
-# ---------- Interactive Quiz ----------
-st.header("🧠 Cyber Awareness Quiz (Yes/No)")
-if st.button("Start Quiz"):
-    correct = 0
-    for s in scenarios.scenarios:
-        speak_streamlit(s["scenario"], lang_code=lang_code)
-        user_ans = st.radio(s["scenario"], ["yes","no"], key=scenarios.scenarios.index(s))
-        if user_ans==s["answer"]:
-            st.success("✅ "+s["explanation"])
-            speak_streamlit("Correct! "+s["explanation"], lang_code=lang_code)
-            correct+=1
+    if check or demo_mode:
+        if user_input.strip()=="":
+            st.warning("⚠️ Please enter some text")
+            speak_streamlit("Please enter some text to analyze.", lang_code=lang_code)
         else:
-            st.error("❌ "+s["explanation"])
-            speak_streamlit("Wrong! "+s["explanation"], lang_code=lang_code)
-    st.subheader(f"Your Score: {correct}/{len(scenarios.scenarios)}")
-    speak_streamlit(f"Your Score is {correct} out of {len(scenarios.scenarios)}", lang_code=lang_code)
-
-st.markdown("---")
-st.caption("Final Year Project | AI Cyber Safety for Illiterate Users")
+            category = predict_category(user_input)
+            feedback = feedback_dict.get(category, {"English":"Be cautious","Hindi":"सतर्क रहें","Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"})[lang]
+            st.error(feedback)
+            speak_streamlit(feedback, lang_code=lang_code)
