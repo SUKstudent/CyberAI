@@ -1,0 +1,8 @@
+streamlit
+gtts
+scikit-learn
+joblib
+pandas
+pyttsx3
+SpeechRecognition
+pyaudio
