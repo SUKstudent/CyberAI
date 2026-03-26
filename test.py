@@ -1,9 +1,10 @@
+# test.py
 import joblib
 
 # Load trained model
 model = joblib.load("cyber_model.pkl")
 
-# Sample test messages for each attack type
+# Sample messages
 test_samples = {
     "phishing": "Click this suspicious link to claim prize",
     "malware": "Install this app to get reward",
@@ -16,8 +17,6 @@ test_samples = {
     "financial_fraud": "Bank transfer requested from unknown",
     "spyware_adware": "App is secretly tracking your device"
 }
-
-print("✅ Running model test on sample inputs...\n")
 
 correct_count = 0
 for cat, msg in test_samples.items():
