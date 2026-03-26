@@ -30,10 +30,19 @@ try:
 except Exception as e:
     st.error(f"⚠️ Model not found or error loading: {e}")
 
+# ---------- Prediction function with rule-based phishing override ----------
 def predict_category(text):
+    text_lower = text.lower()
+    phishing_keywords = ["click", "verify", "login", "account", "password", "link", "suspend", "urgent"]
+    
+    # Rule-based override for phishing
+    if any(word in text_lower for word in phishing_keywords):
+        return "phishing"
+    
     if not model_loaded:
         speak_streamlit("Model not loaded. Cannot predict.", lang_code="en")
         return "unknown"
+    
     return model.predict([text])[0]
 
 # ---------- Feedback dictionary ----------
@@ -133,6 +142,7 @@ elif page=="Cyber Attack Details":
 elif page=="Demo / Analyze":
     st.header("🔍 Demo / Manual Message Analysis")
     demo_mode = st.checkbox("💡 Demo Mode")
+
     demo_messages = {
         "phishing":"Click this suspicious link to claim prize",
         "malware":"Install this app to get reward",
@@ -145,20 +155,33 @@ elif page=="Demo / Analyze":
         "financial_fraud":"Bank transfer requested from unknown",
         "spyware_adware":"App is secretly tracking your device"
     }
-    attack_type = st.selectbox("🔎 Select Demo Attack Type", list(demo_messages.keys()))
-    user_input = demo_messages[attack_type] if demo_mode else st.text_area("📩 Enter message / call content")
 
-    col1,col2 = st.columns(2)
-    with col1: check = st.button("🔍 Analyze")
-    with col2: clear = st.button("🧹 Clear")
-    if clear: st.experimental_rerun()
+    attack_type = st.selectbox("🔎 Select Demo Attack Type", list(demo_messages.keys()))
+
+    # Show demo message in text area but prediction is based on actual content
+    if demo_mode:
+        user_input = demo_messages[attack_type]
+        st.text_area("📩 Message content", value=user_input, height=100)
+    else:
+        user_input = st.text_area("📩 Enter message / call content", height=100)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        check = st.button("🔍 Analyze")
+    with col2:
+        clear = st.button("🧹 Clear")
+    if clear:
+        st.experimental_rerun()
 
     if check or demo_mode:
-        if user_input.strip()=="":
+        if not user_input.strip():
             st.warning("⚠️ Please enter some text")
             speak_streamlit("Please enter some text to analyze.", lang_code=lang_code)
         else:
             category = predict_category(user_input)
-            feedback = feedback_dict.get(category, {"English":"Be cautious","Hindi":"सतर्क रहें","Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"})[lang]
+            feedback = feedback_dict.get(
+                category,
+                {"English":"Be cautious","Hindi":"सतर्क रहें","Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"}
+            )[lang]
             st.error(feedback)
             speak_streamlit(feedback, lang_code=lang_code)
