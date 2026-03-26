@@ -1,23 +1,15 @@
 import streamlit as st
-import pyttsx3
 import joblib
-from utils import scenarios
-
-# ---------- Voice Engine ----------
-engine = pyttsx3.init()
-engine.setProperty('rate', 150)
-def speak(text):
-    try:
-        engine.say(text)
-        engine.runAndWait()
-    except:
-        pass
+import os
+from gtts import gTTS
+import io
 
 # ---------- Load Model ----------
-try:
-    model = joblib.load("cyber_model.pkl")
+model_path = "cyber_model.pkl"
+if os.path.exists(model_path):
+    model = joblib.load(model_path)
     model_loaded = True
-except:
+else:
     st.error("⚠️ Model not found! Run train.py first.")
     model_loaded = False
 
@@ -25,6 +17,22 @@ def predict_category(text):
     if model_loaded:
         return model.predict([text])[0]
     return None
+
+# ---------- Load Scenarios ----------
+try:
+    from utils import scenarios
+    scenarios_list = scenarios.scenarios
+except:
+    st.warning("⚠️ Quiz scenarios not found. Make sure utils/scenarios.py exists.")
+    scenarios_list = []
+
+# ---------- TTS Function ----------
+def speak_streamlit(text, lang_code="en"):
+    tts = gTTS(text=text, lang=lang_code)
+    mp3_fp = io.BytesIO()
+    tts.write_to_fp(mp3_fp)
+    mp3_fp.seek(0)
+    st.audio(mp3_fp, format="audio/mp3")
 
 # ---------- Feedback Dictionary ----------
 feedback_dict = {
@@ -82,9 +90,10 @@ if check or demo_mode:
         category = predict_category(user_input)
         feedback = feedback_dict.get(category, {"English":"⚠️ Be cautious","Hindi":"⚠️ सतर्क रहें","Kannada":"⚠️ ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"})[lang]
         st.error(feedback)
-        speak(feedback)
+        lang_code_map = {"English":"en","Hindi":"hi","Kannada":"kn"}
+        speak_streamlit(feedback, lang_code=lang_code_map[lang])
 
-# ---------- Awareness ----------
+# ---------- Cyber Awareness Tips ----------
 st.markdown("---")
 st.header("📚 Cyber Awareness Tips")
 tips = {
@@ -99,17 +108,17 @@ for tip in tips[lang]:
 st.markdown("---")
 st.header("🧠 Cyber Awareness Quiz (Yes/No)")
 
-if st.button("Start Quiz"):
+if st.button("Start Quiz") and scenarios_list:
     correct = 0
-    for s in scenarios.scenarios:
+    for s in scenarios_list:
         user_ans = st.radio(s["scenario"], ["yes","no"], key=s["scenario"])
-        if user_ans==s["answer"]:
+        if user_ans == s["answer"]:
             st.success("✅ Correct: "+s["explanation"])
-            correct+=1
+            correct += 1
         else:
             st.error("❌ Wrong: "+s["explanation"])
-    st.subheader(f"Your Score: {correct}/{len(scenarios.scenarios)}")
-    speak(f"Your Score is {correct} out of {len(scenarios.scenarios)}")
+    st.subheader(f"Your Score: {correct}/{len(scenarios_list)}")
+    speak_streamlit(f"Your Score is {correct} out of {len(scenarios_list)}", lang_code="en")
 
 st.markdown("---")
 st.caption("Final Year Project | AI Cyber Safety for Illiterate Users")
