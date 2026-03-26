@@ -1,4 +1,4 @@
-🛡️ Cyber Security Awareness AI Teacher for Illiterate Users
+#🛡️ Cyber Security Awareness AI Teacher for Illiterate Users
 
 A voice-based AI system designed to teach cybersecurity awareness to illiterate and low-literacy users. This project uses simple audio lessons and interactive questions to help users understand and avoid common online scams.
 
