@@ -1,4 +1,4 @@
-🛡️ Cyber Security Awareness AI Teacher for Illiterate Users
+##🛡️ Cyber Security Awareness AI Teacher for Illiterate Users
 
 A voice-based AI system designed to teach cybersecurity awareness to illiterate and low-literacy users. This project uses simple audio lessons and interactive questions to help users understand and avoid common online scams.
 
@@ -43,6 +43,7 @@ cyber-ai-teacher/
 │     └── lessons.json
 
 🚀 How to Run
+
 1️⃣ Clone Repository
 git clone https://github.com/your-username/cyber-ai-teacher.git
 cd cyber-ai-teacher
