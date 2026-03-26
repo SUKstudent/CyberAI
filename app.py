@@ -1,32 +1,11 @@
+# app.py
 import streamlit as st
 import joblib
-import os
-from gtts import gTTS
 import io
+from gtts import gTTS
+from utils import scenarios
 
-# ---------- Load Model ----------
-model_path = "cyber_model.pkl"
-if os.path.exists(model_path):
-    model = joblib.load(model_path)
-    model_loaded = True
-else:
-    st.error("⚠️ Model not found! Run train.py first.")
-    model_loaded = False
-
-def predict_category(text):
-    if model_loaded:
-        return model.predict([text])[0]
-    return None
-
-# ---------- Load Scenarios ----------
-try:
-    from utils import scenarios
-    scenarios_list = scenarios.scenarios
-except:
-    st.warning("⚠️ Quiz scenarios not found. Make sure utils/scenarios.py exists.")
-    scenarios_list = []
-
-# ---------- TTS Function ----------
+# ---------- Function to play audio ----------
 def speak_streamlit(text, lang_code="en"):
     tts = gTTS(text=text, lang=lang_code)
     mp3_fp = io.BytesIO()
@@ -34,7 +13,22 @@ def speak_streamlit(text, lang_code="en"):
     mp3_fp.seek(0)
     st.audio(mp3_fp, format="audio/mp3")
 
-# ---------- Feedback Dictionary ----------
+# ---------- Load model ----------
+model_path = "cyber_model.pkl"
+model_loaded = False
+try:
+    model = joblib.load(model_path)
+    model_loaded = True
+except Exception as e:
+    st.error(f"⚠️ Model not found or error loading: {e}")
+
+def predict_category(text):
+    if not model_loaded:
+        speak_streamlit("Model not loaded. Cannot predict.", lang_code="en")
+        return "unknown"
+    return model.predict([text])[0]
+
+# ---------- Feedback dictionary ----------
 feedback_dict = {
     "phishing":{"English":"⚠️ Phishing! Avoid links","Hindi":"⚠️ फ़िशिंग! लिंक से बचें","Kannada":"⚠️ ಫಿಶಿಂಗ್! ಲಿಂಕ್ ತಪ್ಪಿಸಿ"},
     "malware":{"English":"⚠️ Malware detected! Do not install","Hindi":"⚠️ मैलवेयर! इंस्टॉल न करें","Kannada":"⚠️ ಮಾಲ್ವೇರ್ ಕಂಡುಬಂದಿದೆ! ಸ್ಥಾಪಿಸಬೇಡಿ"},
@@ -49,15 +43,46 @@ feedback_dict = {
 }
 
 # ---------- Streamlit UI ----------
-st.set_page_config(page_title="Cyber AI Teacher", page_icon="🛡️")
+st.set_page_config(page_title="AI Cyber Safety Teacher", page_icon="🛡️")
 st.title("🛡️ AI Cyber Safety Teacher")
-st.markdown("### Protecting Everyone from Cyber Frauds")
 
+# ---------- Language Selection ----------
 lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
-demo_mode = st.checkbox("💡 Demo Mode")
+lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
+lang_code = lang_map_code[lang]
+
+# ---------- Welcome Audio ----------
+welcome_msg = {
+    "English":"Welcome to AI Cyber Safety Teacher! Learn how to stay safe online.",
+    "Hindi":"AI साइबर सुरक्षा शिक्षक में आपका स्वागत है! ऑनलाइन सुरक्षित रहें।",
+    "Kannada":"AI ಸೈಬರ್ ಸೆಕ್ಯುರಿಟಿ ಟೀಚರ್‌ಗೆ ಸ್ವಾಗತ! ಆನ್‌ಲೈನ್ ಸುರಕ್ಷಿತವಾಗಿ ಇರಲು ಕಲಿಯಿರಿ."
+}
+speak_streamlit(welcome_msg[lang], lang_code=lang_code)
 
 st.markdown("---")
 
+# ---------- Next Page: Explain Attack Types ----------
+st.header("📌 Cyber Attack Types")
+attack_details = {
+    "phishing": "Messages trying to steal your passwords or personal info via fake links.",
+    "malware": "Software that harms your device or steals data.",
+    "ransomware": "Locks your files and demands money to unlock.",
+    "social_engineering": "Tricks people to share confidential info.",
+    "password_attack": "Attempts to guess or steal your passwords.",
+    "otp_fraud": "Fraud involving stealing your OTP.",
+    "lottery_scam": "Fake lottery messages trying to steal info or money.",
+    "fake_app": "Apps pretending to be real to steal data.",
+    "financial_fraud": "Fraud related to bank transfers or money.",
+    "spyware_adware": "Apps secretly tracking or showing unwanted ads."
+}
+for key, desc in attack_details.items():
+    st.write(f"• {key.replace('_',' ').title()}: {desc}")
+    speak_streamlit(f"{key.replace('_',' ').title()}: {desc}", lang_code=lang_code)
+
+st.markdown("---")
+
+# ---------- Demo / User Input ----------
+demo_mode = st.checkbox("💡 Demo Mode")
 demo_messages = {
     "phishing":"Click this suspicious link to claim prize",
     "malware":"Install this app to get reward",
@@ -70,31 +95,27 @@ demo_messages = {
     "financial_fraud":"Bank transfer requested from unknown",
     "spyware_adware":"App is secretly tracking your device"
 }
-
 attack_type = st.selectbox("🔎 Select Demo Attack Type", list(demo_messages.keys()))
 user_input = demo_messages[attack_type] if demo_mode else st.text_area("📩 Enter message / call content")
 
-col1, col2 = st.columns(2)
+col1,col2 = st.columns(2)
 with col1: check = st.button("🔍 Analyze")
 with col2: clear = st.button("🧹 Clear")
-
-if clear:
-    st.experimental_rerun()
+if clear: st.experimental_rerun()
 
 if check or demo_mode:
-    if not model_loaded:
-        st.warning("⚠️ Model not loaded. Train the model first.")
-    elif user_input.strip() == "":
+    if user_input.strip()=="":
         st.warning("⚠️ Please enter some text")
+        speak_streamlit("Please enter some text to analyze.", lang_code=lang_code)
     else:
         category = predict_category(user_input)
-        feedback = feedback_dict.get(category, {"English":"⚠️ Be cautious","Hindi":"⚠️ सतर्क रहें","Kannada":"⚠️ ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"})[lang]
+        feedback = feedback_dict.get(category, {"English":"Be cautious","Hindi":"सतर्क रहें","Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"})[lang]
         st.error(feedback)
-        lang_code_map = {"English":"en","Hindi":"hi","Kannada":"kn"}
-        speak_streamlit(feedback, lang_code=lang_code_map[lang])
+        speak_streamlit(feedback, lang_code=lang_code)
+
+st.markdown("---")
 
 # ---------- Cyber Awareness Tips ----------
-st.markdown("---")
 st.header("📚 Cyber Awareness Tips")
 tips = {
     "English":["Never share OTP or PIN","Avoid unknown links","Banks never ask passwords","Install apps from trusted sources","Verify messages before clicking"],
@@ -103,22 +124,26 @@ tips = {
 }
 for tip in tips[lang]:
     st.write("•", tip)
+    speak_streamlit(tip, lang_code=lang_code)
+
+st.markdown("---")
 
 # ---------- Interactive Quiz ----------
-st.markdown("---")
 st.header("🧠 Cyber Awareness Quiz (Yes/No)")
-
-if st.button("Start Quiz") and scenarios_list:
+if st.button("Start Quiz"):
     correct = 0
-    for s in scenarios_list:
-        user_ans = st.radio(s["scenario"], ["yes","no"], key=s["scenario"])
-        if user_ans == s["answer"]:
-            st.success("✅ Correct: "+s["explanation"])
-            correct += 1
+    for s in scenarios.scenarios:
+        speak_streamlit(s["scenario"], lang_code=lang_code)
+        user_ans = st.radio(s["scenario"], ["yes","no"], key=scenarios.scenarios.index(s))
+        if user_ans==s["answer"]:
+            st.success("✅ "+s["explanation"])
+            speak_streamlit("Correct! "+s["explanation"], lang_code=lang_code)
+            correct+=1
         else:
-            st.error("❌ Wrong: "+s["explanation"])
-    st.subheader(f"Your Score: {correct}/{len(scenarios_list)}")
-    speak_streamlit(f"Your Score is {correct} out of {len(scenarios_list)}", lang_code="en")
+            st.error("❌ "+s["explanation"])
+            speak_streamlit("Wrong! "+s["explanation"], lang_code=lang_code)
+    st.subheader(f"Your Score: {correct}/{len(scenarios.scenarios)}")
+    speak_streamlit(f"Your Score is {correct} out of {len(scenarios.scenarios)}", lang_code=lang_code)
 
 st.markdown("---")
 st.caption("Final Year Project | AI Cyber Safety for Illiterate Users")
