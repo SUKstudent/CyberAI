@@ -1,12 +1,11 @@
-# app.py
 import streamlit as st
 import pyttsx3
 import joblib
-from utils.scenarios import scenarios
+from utils import scenarios
 
 # ---------- Voice Engine ----------
 engine = pyttsx3.init()
-engine.setProperty('rate',150)
+engine.setProperty('rate', 150)
 def speak(text):
     try:
         engine.say(text)
@@ -17,18 +16,22 @@ def speak(text):
 # ---------- Load Model ----------
 try:
     model = joblib.load("cyber_model.pkl")
+    model_loaded = True
 except:
     st.error("⚠️ Model not found! Run train.py first.")
+    model_loaded = False
 
 def predict_category(text):
-    return model.predict([text])[0]
+    if model_loaded:
+        return model.predict([text])[0]
+    return None
 
-# ---------- Feedback Messages ----------
+# ---------- Feedback Dictionary ----------
 feedback_dict = {
     "phishing":{"English":"⚠️ Phishing! Avoid links","Hindi":"⚠️ फ़िशिंग! लिंक से बचें","Kannada":"⚠️ ಫಿಶಿಂಗ್! ಲಿಂಕ್ ತಪ್ಪಿಸಿ"},
     "malware":{"English":"⚠️ Malware detected! Do not install","Hindi":"⚠️ मैलवेयर! इंस्टॉल न करें","Kannada":"⚠️ ಮಾಲ್ವೇರ್ ಕಂಡುಬಂದಿದೆ! ಸ್ಥಾಪಿಸಬೇಡಿ"},
     "ransomware":{"English":"⚠️ Ransomware! Do not pay","Hindi":"⚠️ रैनसमवेयर! भुगतान न करें","Kannada":"⚠️ ರ್ಯಾನ್ಸಮ್‌ವೇರ್! ಪಾವತಿ ಮಾಡಬೇಡಿ"},
-    "social_engineering":{"English":"⚠️ Social Engineering! Be alert","Hindi":"⚠️ सोशल इंजीनियरिंग! सतर्क रहें","Kannada":"⚠️ ಸಾಮಾಜಿಕ ಎಂಜಿನಿಯರಿಂಗ್! ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"},
+    "social_engineering":{"English":"⚠️ Social Engineering! Be alert","Hindi":"⚠️ सोशल इंजिनियरिंग! सतर्क रहें","Kannada":"⚠️ ಸಾಮಾಜಿಕ ಎಂಜಿನಿಯರಿಂಗ್! ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"},
     "password_attack":{"English":"⚠️ Password attack! Keep strong","Hindi":"⚠️ पासवर्ड हमला! मजबूत रखें","Kannada":"⚠️ ಪಾಸ್‌ವರ್ಡ್ ದಾಳಿ! ಬಲವಾಗಿ ಇಡಿ"},
     "otp_fraud":{"English":"⚠️ OTP Fraud! Never share","Hindi":"⚠️ OTP धोखाधड़ी! साझा न करें","Kannada":"⚠️ OTP ಮೋಸ! ಹಂಚಬೇಡಿ"},
     "lottery_scam":{"English":"⚠️ Lottery Scam! Ignore","Hindi":"⚠️ लॉटरी धोखाधड़ी! अनदेखा करें","Kannada":"⚠️ ಲಾಟರಿ ಮೋಸ! ನಿರ್ಲಕ್ಷ್ಯ ಮಾಡಿ"},
@@ -63,19 +66,23 @@ demo_messages = {
 attack_type = st.selectbox("🔎 Select Demo Attack Type", list(demo_messages.keys()))
 user_input = demo_messages[attack_type] if demo_mode else st.text_area("📩 Enter message / call content")
 
-col1,col2 = st.columns(2)
+col1, col2 = st.columns(2)
 with col1: check = st.button("🔍 Analyze")
 with col2: clear = st.button("🧹 Clear")
 
-if clear: st.experimental_rerun()
+if clear:
+    st.experimental_rerun()
 
-if (check or demo_mode) and user_input.strip()!="":
-    category = predict_category(user_input)
-    feedback = feedback_dict.get(category,{"English":"⚠️ Be cautious","Hindi":"⚠️ सतर्क रहें","Kannada":"⚠️ ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"})[lang]
-    st.error(feedback)
-    speak(feedback)
-elif (check or demo_mode) and user_input.strip()=="":
-    st.warning("⚠️ Please enter some text")
+if check or demo_mode:
+    if not model_loaded:
+        st.warning("⚠️ Model not loaded. Train the model first.")
+    elif user_input.strip() == "":
+        st.warning("⚠️ Please enter some text")
+    else:
+        category = predict_category(user_input)
+        feedback = feedback_dict.get(category, {"English":"⚠️ Be cautious","Hindi":"⚠️ सतर्क रहें","Kannada":"⚠️ ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"})[lang]
+        st.error(feedback)
+        speak(feedback)
 
 # ---------- Awareness ----------
 st.markdown("---")
@@ -94,15 +101,15 @@ st.header("🧠 Cyber Awareness Quiz (Yes/No)")
 
 if st.button("Start Quiz"):
     correct = 0
-    for s in scenarios:
+    for s in scenarios.scenarios:
         user_ans = st.radio(s["scenario"], ["yes","no"], key=s["scenario"])
         if user_ans==s["answer"]:
             st.success("✅ Correct: "+s["explanation"])
             correct+=1
         else:
             st.error("❌ Wrong: "+s["explanation"])
-    st.subheader(f"Your Score: {correct}/{len(scenarios)}")
-    speak(f"Your Score is {correct} out of {len(scenarios)}")
+    st.subheader(f"Your Score: {correct}/{len(scenarios.scenarios)}")
+    speak(f"Your Score is {correct} out of {len(scenarios.scenarios)}")
 
 st.markdown("---")
 st.caption("Final Year Project | AI Cyber Safety for Illiterate Users")
