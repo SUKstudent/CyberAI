@@ -1,3 +1,5 @@
+# utils/scenarios.py
+
 scenarios = [
     {"scenario":"Someone called asking for OTP","answer":"no","explanation":"Never share OTP with anyone."},
     {"scenario":"Email asking to reset password via link","answer":"no","explanation":"Check official source, phishing alert."},
