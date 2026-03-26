@@ -1,7 +1,8 @@
+# app.py
 import streamlit as st
 import pyttsx3
 import joblib
-from utils import scenarios
+from utils.scenarios import scenarios
 
 # ---------- Voice Engine ----------
 engine = pyttsx3.init()
@@ -17,11 +18,12 @@ def speak(text):
 try:
     model = joblib.load("cyber_model.pkl")
 except:
-    st.error("⚠️ Model not found! Run train_model.py first.")
+    st.error("⚠️ Model not found! Run train.py first.")
 
 def predict_category(text):
     return model.predict([text])[0]
 
+# ---------- Feedback Messages ----------
 feedback_dict = {
     "phishing":{"English":"⚠️ Phishing! Avoid links","Hindi":"⚠️ फ़िशिंग! लिंक से बचें","Kannada":"⚠️ ಫಿಶಿಂಗ್! ಲಿಂಕ್ ತಪ್ಪಿಸಿ"},
     "malware":{"English":"⚠️ Malware detected! Do not install","Hindi":"⚠️ मैलवेयर! इंस्टॉल न करें","Kannada":"⚠️ ಮಾಲ್ವೇರ್ ಕಂಡುಬಂದಿದೆ! ಸ್ಥಾಪಿಸಬೇಡಿ"},
@@ -67,14 +69,13 @@ with col2: clear = st.button("🧹 Clear")
 
 if clear: st.experimental_rerun()
 
-if check or demo_mode:
-    if user_input.strip()=="":
-        st.warning("⚠️ Please enter some text")
-    else:
-        category = predict_category(user_input)
-        feedback = feedback_dict.get(category,{"English":"⚠️ Be cautious","Hindi":"⚠️ सतर्क रहें","Kannada":"⚠️ ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"})[lang]
-        st.error(feedback)
-        speak(feedback)
+if (check or demo_mode) and user_input.strip()!="":
+    category = predict_category(user_input)
+    feedback = feedback_dict.get(category,{"English":"⚠️ Be cautious","Hindi":"⚠️ सतर्क रहें","Kannada":"⚠️ ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"})[lang]
+    st.error(feedback)
+    speak(feedback)
+elif (check or demo_mode) and user_input.strip()=="":
+    st.warning("⚠️ Please enter some text")
 
 # ---------- Awareness ----------
 st.markdown("---")
@@ -93,15 +94,15 @@ st.header("🧠 Cyber Awareness Quiz (Yes/No)")
 
 if st.button("Start Quiz"):
     correct = 0
-    for s in scenarios.scenarios:
+    for s in scenarios:
         user_ans = st.radio(s["scenario"], ["yes","no"], key=s["scenario"])
         if user_ans==s["answer"]:
             st.success("✅ Correct: "+s["explanation"])
             correct+=1
         else:
             st.error("❌ Wrong: "+s["explanation"])
-    st.subheader(f"Your Score: {correct}/{len(scenarios.scenarios)}")
-    speak(f"Your Score is {correct} out of {len(scenarios.scenarios)}")
+    st.subheader(f"Your Score: {correct}/{len(scenarios)}")
+    speak(f"Your Score is {correct} out of {len(scenarios)}")
 
 st.markdown("---")
 st.caption("Final Year Project | AI Cyber Safety for Illiterate Users")
