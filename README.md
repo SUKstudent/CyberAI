@@ -46,7 +46,9 @@ cyber-ai-teacher/
 1️⃣ Clone Repository
 git clone https://github.com/your-username/cyber-ai-teacher.git
 cd cyber-ai-teacher
+
 2️⃣ Install Requirements
 pip install -r requirements.txt
+
 3️⃣ Run App
 streamlit run app.py
