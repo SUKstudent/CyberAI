@@ -7,7 +7,7 @@ from sklearn.naive_bayes import MultinomialNB
 import joblib
 
 # Load dataset
-df = pd.read_csv("C:/Users/Sadananda/Desktop/Cyber AI/cyber_dataset.csv")
+df = pd.read_csv("cyber_dataset.csv")
 X, y = df["text"], df["label"]
 
 # Train-test split (stratified)
