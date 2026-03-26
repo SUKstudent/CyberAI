@@ -4,15 +4,17 @@ import joblib
 import io
 from gtts import gTTS
 from PIL import Image
-import random
 from utils import scenarios
 
-# ---------- Display Logo ----------
-try:
-    logo = Image.open("ai_teacher_logo.jpeg")  # JPEG logo
-    st.image(logo, width=250)  # Increased width from 150 → 250
-except Exception as e:
-    st.warning(f"Logo not found or failed to load: {e}")
+# ---------- Function to display centered images ----------
+def display_centered_image(image_path, width=250):
+    try:
+        img = Image.open(image_path)
+        col1, col2, col3 = st.columns([1,2,1])
+        with col2:
+            st.image(img, width=width)
+    except Exception as e:
+        st.warning(f"Image not found or failed to load: {e}")
 
 # ---------- Audio function ----------
 def speak_streamlit(text, lang_code="en"):
@@ -62,6 +64,7 @@ page = st.sidebar.radio("Go to:", ["Welcome","Cyber Attack Details","Demo / Anal
 
 # ---------- Welcome Page ----------
 if page=="Welcome":
+    display_centered_image("welcome_image.jpeg", width=350)  # Welcome image
     st.header("👋 Welcome to AI Cyber Safety Teacher")
     welcome_msg = {
         "English":"Welcome to AI Cyber Safety Teacher! Learn how to stay safe online.",
@@ -73,6 +76,7 @@ if page=="Welcome":
 
 # ---------- Cyber Attack Details ----------
 elif page=="Cyber Attack Details":
+    display_centered_image("ai_teacher_logo.jpeg", width=250)  # Logo for other pages
     st.header("📌 Cyber Attack Types")
     attack_details = {
         "phishing": {
@@ -132,8 +136,8 @@ elif page=="Cyber Attack Details":
 
 # ---------- Demo / Manual Analysis ----------
 elif page=="Demo / Analyze":
+    display_centered_image("ai_teacher_logo.jpeg", width=250)  # Logo
     st.header("🔍 Demo / Manual Message Analysis")
-    demo_mode = st.checkbox("💡 Demo Mode")
 
     demo_messages = [
         "Click this suspicious link to claim prize",
@@ -141,35 +145,26 @@ elif page=="Demo / Analyze":
         "Your files locked, pay to unlock",
         "Call asking OTP for verification",
         "Someone asking for password",
-        "You won a lottery you never entered"
+        "Someone asked my OTP",
+        "You won a lottery you never entered",
+        "Install this fake banking app",
+        "Bank transfer requested from unknown",
+        "App is secretly tracking your device"
     ]
 
-    # Demo mode → pick random message
-    if demo_mode:
-        user_input = random.choice(demo_messages)
-        st.text_area("📩 Message content", value=user_input, height=100)
-    else:
-        user_input = st.text_area("📩 Enter message / call content", height=100)
+    user_input = st.text_area("📩 Enter message / call content", height=150)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        check = st.button("🔍 Analyze")
-    with col2:
-        clear = st.button("🧹 Clear")
+    col1,col2 = st.columns(2)
+    with col1: check = st.button("🔍 Analyze")
+    with col2: clear = st.button("🧹 Clear")
+    if clear: st.experimental_rerun()
 
-    if clear:
-        st.experimental_rerun()
-
-    if check or demo_mode:
-        if not user_input.strip():
+    if check:
+        if user_input.strip() == "":
             st.warning("⚠️ Please enter some text")
             speak_streamlit("Please enter some text to analyze.", lang_code=lang_code)
         else:
             category = predict_category(user_input)
-            feedback = feedback_dict.get(
-                category,
-                {"English":"Be cautious","Hindi":"सतर्क रहें","Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"}
-            )[lang]
-
+            feedback = feedback_dict.get(category, {"English":"Be cautious","Hindi":"सतर्क रहें","Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"})[lang]
             st.error(feedback)
             speak_streamlit(feedback, lang_code=lang_code)
