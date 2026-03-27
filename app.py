@@ -135,18 +135,34 @@ elif page=="Demo / Analyze":
     # Text input
     user_input = st.text_area("📩 Enter message / call content", height=150)
 
-    # Screenshot upload
+    # Screenshot upload (Streamlit-friendly OCR)
     uploaded_file = st.file_uploader("📷 Upload screenshot (WhatsApp / Email)", type=["png","jpg","jpeg"])
     extracted_text = ""
     if uploaded_file:
         image = Image.open(uploaded_file)
         st.image(image, caption="Uploaded Screenshot")
         try:
+            # Auto set Windows Tesseract path
+            import platform
+            if platform.system() == "Windows":
+                pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
             extracted_text = pytesseract.image_to_string(image)
-            st.write("📄 Extracted text:", extracted_text)
-        except Exception:
-            st.warning("Failed to extract text: tesseract is not installed or it's not in your PATH. "
-                       "See README file for more information.")
+            if extracted_text.strip() == "":
+                st.info("⚠️ OCR did not detect any text in the image.")
+            else:
+                st.write("📄 Extracted text:", extracted_text)
+
+        except FileNotFoundError:
+            st.warning(
+                "⚠️ Tesseract OCR executable not found. "
+                "Please install Tesseract (https://github.com/tesseract-ocr/tesseract) "
+                "and make sure it is in your PATH."
+            )
+            extracted_text = ""
+        except Exception as e:
+            st.warning(f"⚠️ Failed to extract text: {e}")
+            extracted_text = ""
 
     col1, col2 = st.columns(2)
     with col1:
@@ -172,5 +188,4 @@ elif page=="Demo / Analyze":
             )[lang]
 
             st.error(feedback)
-            # Speak only the description in selected language
             speak_streamlit(feedback, lang_code=lang_code)
