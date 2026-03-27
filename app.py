@@ -151,6 +151,26 @@ elif page=="Demo / Analyze":
             speak_streamlit("Please enter some text to analyze.", lang_code=lang_code)
         else:
             category = predict_category(final_text)
+
+            # Display category in selected language
+            category_names = {
+                "phishing": {"English":"Phishing","Hindi":"फ़िशिंग","Kannada":"ಫಿಶಿಂಗ್"},
+                "malware": {"English":"Malware","Hindi":"मैलवेयर","Kannada":"ಮ್ಯಾಲ್ವೇರ್"},
+                "ransomware": {"English":"Ransomware","Hindi":"रैनसमवेयर","Kannada":"ರೆನ್ಸಮ್‌ವೇರ್"},
+                "social_engineering": {"English":"Social Engineering","Hindi":"सोशल इंजीनियरिंग","Kannada":"ಸೋಶಿಯಲ್ ಇಂಜಿನಿಯರಿಂಗ್"},
+                "password_attack": {"English":"Password Attack","Hindi":"पासवर्ड हमला","Kannada":"ಪಾಸ್ವರ್ಡ್ ದಾಳಿ"},
+                "otp_fraud": {"English":"OTP Fraud","Hindi":"OTP धोखा","Kannada":"OTP ಮೋಸ"},
+                "lottery_scam": {"English":"Lottery Scam","Hindi":"लॉटरी घोटाला","Kannada":"ಲಾಟರಿ ಮೋಸ"},
+                "fake_app": {"English":"Fake App","Hindi":"नकली ऐप","Kannada":"ನಕಲಿ ಆಪ್"},
+                "financial_fraud": {"English":"Financial Fraud","Hindi":"वित्तीय धोखा","Kannada":"ಹಣಕಾಸು ಮೋಸ"},
+                "spyware_adware": {"English":"Spyware / Adware","Hindi":"स्पायवेयर / एडवेयर","Kannada":"ಸ್ಪೈವೇರ್ / ಆಡ್ವೇರ್"}
+            }
+
+            category_display = category_names.get(category, {"English":"Unknown","Hindi":"अज्ञात","Kannada":"ಅಜ್ಞಾನ"})
+            st.info(f"🛡️ Detected Cyber Attack Type: {category_display[lang]}")
+            speak_streamlit(f"Detected Cyber Attack Type: {category_display[lang]}", lang_code=lang_code)
+
+            # Display feedback
             feedback = feedback_dict.get(
                 category,
                 {"English":"Be cautious","Hindi":"सतर्क रहें","Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"}
