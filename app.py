@@ -1,150 +1,155 @@
+# app.py
 import streamlit as st
 import joblib
 import io
 from gtts import gTTS
 from PIL import Image
 import pytesseract
+from utils import scenarios  # keep your original utils import
 
-# ---------- CONFIG ----------
-st.set_page_config(page_title="Cyber Safety AI", layout="centered")
-
-# ---------- IMAGE DISPLAY ----------
+# ---------- Function to display centered images ----------
 def display_centered_image(image_path, width=250):
     try:
         img = Image.open(image_path)
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
             st.image(img, width=width)
-    except:
-        pass
+    except Exception as e:
+        st.warning(f"Image not found or failed to load: {e}")
 
-# ---------- AUDIO ----------
-def speak(text, lang):
-    try:
-        tts = gTTS(text=text, lang=lang)
-        fp = io.BytesIO()
-        tts.write_to_fp(fp)
-        fp.seek(0)
-        st.audio(fp)
-    except:
-        st.warning("Audio not supported")
+# ---------- Audio function ----------
+def speak_streamlit(text, lang_code="en"):
+    tts = gTTS(text=text, lang=lang_code)
+    mp3_fp = io.BytesIO()
+    tts.write_to_fp(mp3_fp)
+    mp3_fp.seek(0)
+    st.audio(mp3_fp, format="audio/mp3")
 
-# ---------- LOAD MODEL ----------
+# ---------- Load model ----------
+model_path = "cyber_model.pkl"
 model_loaded = False
 try:
-    model = joblib.load("cyber_model.pkl")
+    model = joblib.load(model_path)
     model_loaded = True
-except:
-    st.sidebar.warning("ML model not loaded")
+except Exception as e:
+    st.error(f"⚠️ Model not found or error loading: {e}")
 
-# ---------- OCR FUNCTION ----------
-def extract_text_from_image(image):
-    try:
-        text = pytesseract.image_to_string(image)
-        return text
-    except:
-        return ""
-
-# ---------- PREDICTION ----------
 def predict_category(text):
-    text = text.lower()
+    if not model_loaded:
+        speak_streamlit("Model not loaded. Cannot predict.", lang_code="en")
+        return "unknown"
+    return model.predict([text])[0]
 
-    if "otp" in text:
-        return "otp_fraud"
-    elif "lottery" in text or "won" in text:
-        return "lottery_scam"
-    elif "password" in text:
-        return "password_attack"
-    elif "install" in text or "apk" in text:
-        return "fake_app"
-    elif "pay" in text or "money" in text:
-        return "financial_fraud"
-    elif "ransom" in text or "encrypted" in text:
-        return "ransomware"
-    elif "track" in text:
-        return "spyware_adware"
-    elif "urgent" in text:
-        return "social_engineering"
-    elif "link" in text or "click" in text:
-        return "phishing"
-
-    if model_loaded:
-        return model.predict([text])[0]
-
-    return "unknown"
-
-# ---------- FEEDBACK ----------
+# ---------- Feedback dictionary ----------
 feedback_dict = {
-    "otp_fraud":{
-        "English":"This message is asking for OTP. Do NOT share it.",
-        "Hindi":"यह OTP मांग रहा है। साझा न करें।",
-        "Kannada":"ಇದು OTP ಕೇಳುತ್ತಿದೆ. ಹಂಚಬೇಡಿ."
-    },
-    "phishing":{
-        "English":"This message has a suspicious link. Do NOT click.",
-        "Hindi":"इसमें संदिग्ध लिंक है। क्लिक न करें।",
-        "Kannada":"ಇದರಲ್ಲಿ ಅನುಮಾನಾಸ್ಪದ ಲಿಂಕ್ ಇದೆ. ಕ್ಲಿಕ್ ಮಾಡಬೇಡಿ."
-    },
-    "lottery_scam":{
-        "English":"Fake prize message. Ignore it.",
-        "Hindi":"यह नकली इनाम है। अनदेखा करें।",
-        "Kannada":"ಇದು ನಕಲಿ ಬಹುಮಾನ. ನಿರ್ಲಕ್ಷ್ಯ ಮಾಡಿ."
-    },
-    "malware":{
-        "English":"This may harm your phone. Do not open.",
-        "Hindi":"यह आपके फोन को नुकसान पहुंचा सकता है।",
-        "Kannada":"ಇದು ನಿಮ್ಮ ಫೋನ್‌ಗೆ ಹಾನಿ ಮಾಡಬಹುದು."
-    }
+    "phishing":{"English":"This message contains a suspicious link. Do NOT click it.","Hindi":"इस संदेश में संदिग्ध लिंक है। इसे क्लिक न करें।","Kannada":"ಈ ಸಂದೇಶದಲ್ಲಿ ಅನುಮಾನಾಸ್ಪದ ಲಿಂಕ್ ಇದೆ. ಕ್ಲಿಕ್ ಮಾಡಬೇಡಿ."},
+    "malware":{"English":"This file or link can harm your phone. Do NOT open it.","Hindi":"यह फ़ाइल या लिंक आपके फोन को नुकसान पहुंचा सकता है। इसे न खोलें।","Kannada":"ಈ ಫೈಲ್ ಅಥವಾ ಲಿಂಕ್ ನಿಮ್ಮ ಫೋನ್‌ಗೆ ಹಾನಿ ಮಾಡಬಹುದು. ತೆರೆಯಬೇಡಿ."},
+    "ransomware":{"English":"Your device may be locked for money. Do NOT pay anything.","Hindi":"आपका डिवाइस पैसे के लिए लॉक किया जा सकता है। पैसे न दें।","Kannada":"ನಿಮ್ಮ ಸಾಧನವನ್ನು ಹಣಕ್ಕಾಗಿ ಲಾಕ್ ಮಾಡಬಹುದು. ಹಣ ಕೊಡಬೇಡಿ."},
+    "social_engineering":{"English":"Someone is trying to trick you. Do NOT trust easily.","Hindi":"कोई आपको धोखा देने की कोशिश कर रहा है। आसानी से विश्वास न करें।","Kannada":"ಯಾರೋ ನಿಮ್ಮನ್ನು ಮೋಸ ಮಾಡಲು ಪ್ರಯತ್ನಿಸುತ್ತಿದ್ದಾರೆ. ಸುಲಭವಾಗಿ ನಂಬಬೇಡಿ."},
+    "password_attack":{"English":"Someone is trying to get your password. Keep it safe.","Hindi":"कोई आपका पासवर्ड लेने की कोशिश कर रहा है। इसे सुरक्षित रखें।","Kannada":"ಯಾರೋ ನಿಮ್ಮ ಪಾಸ್‌ವರ್ಡ್ ಪಡೆಯಲು ಪ್ರಯತ್ನಿಸುತ್ತಿದ್ದಾರೆ. ಸುರಕ್ಷಿತವಾಗಿರಿಸಿ."},
+    "otp_fraud":{"English":"This message is asking for OTP. Do NOT share it.","Hindi":"यह OTP मांग रहा है। साझा न करें।","Kannada":"ಇದು OTP ಕೇಳುತ್ತಿದೆ. ಹಂಚಬೇಡಿ."},
+    "lottery_scam":{"English":"Fake prize message. Ignore it.","Hindi":"यह नकली इनाम है। अनदेखा करें।","Kannada":"ಇದು ನಕಲಿ ಬಹುಮಾನ. ನಿರ್ಲಕ್ಷ್ಯ ಮಾಡಿ."},
+    "fake_app":{"English":"This app is not safe. Do NOT install it.","Hindi":"यह ऐप सुरक्षित नहीं है। इसे इंस्टॉल न करें।","Kannada":"ಈ ಆಪ್ ಸುರಕ್ಷಿತವಲ್ಲ. ಇದನ್ನು ಸ್ಥಾಪಿಸಬೇಡಿ."},
+    "financial_fraud":{"English":"This message is trying to take your money. Be careful.","Hindi":"यह संदेश आपके पैसे लेने की कोशिश कर रहा है। सावधान रहें।","Kannada":"ಈ ಸಂದೇಶ ನಿಮ್ಮ ಹಣ ತೆಗೆದುಕೊಳ್ಳಲು ಪ್ರಯತ್ನಿಸುತ್ತದೆ. ಎಚ್ಚರಿಕೆ ವಹಿಸಿ."},
+    "spyware_adware":{"English":"This may track your phone activity secretly. Be careful.","Hindi":"यह आपके फोन को गुप्त रूप से ट्रैक कर सकता है। सावधान रहें।","Kannada":"ಇದು ನಿಮ್ಮ ಫೋನ್ ಚಟುವಟಿಕೆಯನ್ನು ಗುಪ್ತವಾಗಿ ಟ್ರಾಕ್ ಮಾಡಬಹುದು. ಎಚ್ಚರಿಕೆ ವಹಿಸಿ."}
 }
 
-# ---------- NAVIGATION ----------
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go", ["Home","Analyze"])
+# ---------- Navigation ----------
+st.sidebar.header("📌 Navigation")
+page = st.sidebar.radio("Go to:", ["Welcome","Cyber Attack Details","Demo / Analyze"])
 
-# ---------- HOME ----------
-if page == "Home":
-    st.title("AI Cyber Safety Teacher")
+# ---------- Welcome Page ----------
+if page=="Welcome":
+    display_centered_image("welcome_image.jpeg", width=350)
 
-# ---------- ANALYZE ----------
-elif page == "Analyze":
-    st.title("Analyze Message")
+    lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
+    lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
+    lang_code = lang_map_code[lang]
 
-    lang = st.selectbox("Language", ["English","Hindi","Kannada"])
-    lang_code = {"English":"en","Hindi":"hi","Kannada":"kn"}[lang]
+    st.header("👋 Welcome to AI Cyber Safety Teacher")
+    welcome_msg = {
+        "English":"Welcome to AI Cyber Safety Teacher! Learn how to stay safe online.",
+        "Hindi":"AI साइबर सुरक्षा शिक्षक में आपका स्वागत है! ऑनलाइन सुरक्षित रहें।",
+        "Kannada":"AI ಸೈಬರ್ ಸೆಕ್ಯುರಿಟಿ ಟೀಚರ್‌ಗೆ ಸ್ವಾಗತ! ಆನ್‌ಲೈನ್ ಸುರಕ್ಷಿತವಾಗಿ ಇರಲು ಕಲಿಯಿರಿ."
+    }
+    st.write(welcome_msg[lang])
+    speak_streamlit(welcome_msg[lang], lang_code=lang_code)
 
-    # -------- TEXT INPUT --------
-    text_input = st.text_area("Enter message")
+# ---------- Cyber Attack Details ----------
+elif page=="Cyber Attack Details":
+    display_centered_image("ai_teacher_logo.jpeg", width=250)
 
-    # -------- IMAGE INPUT --------
-    uploaded_file = st.file_uploader("Upload screenshot (WhatsApp / Email)", type=["png","jpg","jpeg"])
+    lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
+    lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
+    lang_code = lang_map_code[lang]
 
+    st.header("📌 Cyber Attack Types")
+
+    attack_details = {
+        "phishing": {
+            "English": "Messages trying to steal your passwords or personal info via fake links.",
+            "Hindi": "संदेश जो आपके पासवर्ड या व्यक्तिगत जानकारी को नकली लिंक के माध्यम से चुराने की कोशिश करते हैं।",
+            "Kannada": "ತಪ್ಪು ಲಿಂಕ್ ಮೂಲಕ ನಿಮ್ಮ ಪಾಸ್ವರ್ಡ್ ಅಥವಾ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ಕದಿಯಲು ಪ್ರಯತ್ನಿಸುವ ಸಂದೇಶಗಳು."
+        },
+        "malware": {
+            "English": "Software that harms your device or steals data.",
+            "Hindi": "सॉफ़्टवेयर जो आपके डिवाइस को नुकसान पहुंचाता है या डेटा चुराता है।",
+            "Kannada": "ನಿಮ್ಮ ಸಾಧನಕ್ಕೆ ಹಾನಿ ಮಾಡುವ ಅಥವಾ ಡೇಟಾವನ್ನು ಕದಿಯುವ ಸಾಫ್ಟ್‌ವೇರ್."
+        }
+    }
+
+    for key, desc_dict in attack_details.items():
+        st.write(f"• {key.title()}: {desc_dict[lang]}")
+        speak_streamlit(desc_dict[lang], lang_code=lang_code)
+
+# ---------- Demo / Analyze ----------
+elif page=="Demo / Analyze":
+    display_centered_image("ai_teacher_logo.jpeg", width=250)
+
+    lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
+    lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
+    lang_code = lang_map_code[lang]
+
+    st.header("🔍 Demo / Manual Message Analysis")
+
+    # Text input
+    user_input = st.text_area("📩 Enter message / call content", height=150)
+
+    # Screenshot upload
+    uploaded_file = st.file_uploader("📷 Upload screenshot (WhatsApp / Email)", type=["png","jpg","jpeg"])
     extracted_text = ""
-
     if uploaded_file:
         image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Image")
+        st.image(image, caption="Uploaded Screenshot")
+        try:
+            extracted_text = pytesseract.image_to_string(image)
+            st.write("📄 Extracted text:", extracted_text)
+        except Exception as e:
+            st.warning(f"Failed to extract text: {e}")
 
-        extracted_text = extract_text_from_image(image)
-        st.write("📄 Extracted Text:", extracted_text)
+    col1, col2 = st.columns(2)
+    with col1:
+        check = st.button("🔍 Analyze")
+    with col2:
+        clear = st.button("🧹 Clear")
 
-    # -------- BUTTON --------
-    if st.button("Analyze"):
+    if clear:
+        st.experimental_rerun()
 
-        final_text = text_input if text_input else extracted_text
+    if check:
+        # Use text area if present, otherwise OCR text
+        final_text = user_input if user_input.strip() != "" else extracted_text
 
         if final_text.strip() == "":
-            st.warning("No input provided")
+            st.warning("⚠️ Please enter some text")
+            speak_streamlit("Please enter some text to analyze.", lang_code=lang_code)
         else:
             category = predict_category(final_text)
-
             feedback = feedback_dict.get(
                 category,
-                {
-                    "English":"Be careful",
-                    "Hindi":"सतर्क रहें",
-                    "Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"
-                }
+                {"English":"Be cautious","Hindi":"सतर्क रहें","Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"}
             )[lang]
 
-            st.error("🚨 " + feedback)
-            speak(feedback, lang_code)
+            st.error(feedback)
+            # Speak only the description in selected language
+            speak_streamlit(feedback, lang_code=lang_code)
