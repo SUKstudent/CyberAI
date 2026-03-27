@@ -4,135 +4,190 @@ import joblib
 import io
 from gtts import gTTS
 from PIL import Image
-from utils import scenarios
+
+# ---------- Page Config ----------
+st.set_page_config(page_title="AI Cyber Safety Teacher", layout="centered")
 
 # ---------- Function to display centered images ----------
 def display_centered_image(image_path, width=250):
     try:
         img = Image.open(image_path)
-        col1, col2, col3 = st.columns([1,2,1])
+        col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.image(img, width=width)
-    except Exception as e:
-        st.warning(f"Image not found or failed to load: {e}")
+    except:
+        st.warning("⚠️ Image not found")
 
 # ---------- Audio function ----------
 def speak_streamlit(text, lang_code="en"):
-    tts = gTTS(text=text, lang=lang_code)
-    mp3_fp = io.BytesIO()
-    tts.write_to_fp(mp3_fp)
-    mp3_fp.seek(0)
-    st.audio(mp3_fp, format="audio/mp3")
+    try:
+        tts = gTTS(text=text, lang=lang_code)
+        mp3_fp = io.BytesIO()
+        tts.write_to_fp(mp3_fp)
+        mp3_fp.seek(0)
+        st.audio(mp3_fp, format="audio/mp3")
+    except:
+        st.warning("⚠️ Audio not supported")
 
-# ---------- Load model ----------
+# ---------- Load ML model ----------
 model_path = "cyber_model.pkl"
 model_loaded = False
+
 try:
     model = joblib.load(model_path)
     model_loaded = True
-except Exception as e:
-    st.error(f"⚠️ Model not found or error loading: {e}")
+except:
+    st.sidebar.warning("⚠️ ML Model not loaded (using smart detection)")
 
+# ---------- Smart Prediction Function ----------
 def predict_category(text):
-    if not model_loaded:
-        speak_streamlit("Model not loaded. Cannot predict.", lang_code="en")
-        return "unknown"
-    return model.predict([text])[0]
+    text = text.lower()
+
+    # Rule-based detection (FAST + WORKING)
+    if "otp" in text:
+        return "otp_fraud"
+    elif "lottery" in text or "won" in text or "prize" in text:
+        return "lottery_scam"
+    elif "password" in text or "login" in text:
+        return "password_attack"
+    elif "install" in text or "apk" in text or "app" in text:
+        return "fake_app"
+    elif "pay" in text or "money" in text or "transfer" in text:
+        return "financial_fraud"
+    elif "encrypted" in text or "ransom" in text:
+        return "ransomware"
+    elif "spy" in text or "track" in text or "monitor" in text:
+        return "spyware_adware"
+    elif "urgent" in text or "call me" in text or "help me" in text:
+        return "social_engineering"
+    elif "click" in text or "link" in text:
+        return "phishing"
+
+    # ML fallback
+    if model_loaded:
+        return model.predict([text])[0]
+
+    return "unknown"
 
 # ---------- Feedback dictionary ----------
 feedback_dict = {
-    "phishing":{"English":"⚠️ Phishing! Avoid links","Hindi":"⚠️ फ़िशिंग! लिंक से बचें","Kannada":"⚠️ ಫಿಶಿಂಗ್! ಲಿಂಕ್ ತಪ್ಪಿಸಿ"},
-    "malware":{"English":"⚠️ Malware detected! Do not install","Hindi":"⚠️ मैलवेयर! इंस्टॉल न करें","Kannada":"⚠️ ಮಾಲ್ವೇರ್ ಕಂಡುಬಂದಿದೆ! ಸ್ಥಾಪಿಸಬೇಡಿ"},
-    "ransomware":{"English":"⚠️ Ransomware! Do not pay","Hindi":"⚠️ रैनसमवेयर! भुगतान न करें","Kannada":"⚠️ ರ್ಯಾನ್ಸಮ್‌ವೇರ್! ಪಾವತಿ ಮಾಡಬೇಡಿ"},
-    "social_engineering":{"English":"⚠️ Social Engineering! Be alert","Hindi":"⚠️ सोशल इंजिनियरिंग! सतर्क रहें","Kannada":"⚠️ ಸಾಮಾಜಿಕ ಎಂಜಿನಿಯರಿಂಗ್! ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"},
-    "password_attack":{"English":"⚠️ Password attack! Keep strong","Hindi":"⚠️ पासवर्ड हमला! मजबूत रखें","Kannada":"⚠️ ಪಾಸ್‌ವರ್ಡ್ ದಾಳಿ! ಬಲವಾಗಿ ಇಡಿ"},
-    "otp_fraud":{"English":"⚠️ OTP Fraud! Never share","Hindi":"⚠️ OTP धोखाधड़ी! साझा न करें","Kannada":"⚠️ OTP ಮೋಸ! ಹಂಚಬೇಡಿ"},
-    "lottery_scam":{"English":"⚠️ Lottery Scam! Ignore","Hindi":"⚠️ लॉटरी धोखाधड़ी! अनदेखा करें","Kannada":"⚠️ ಲಾಟರಿ ಮೋಸ! ನಿರ್ಲಕ್ಷ್ಯ ಮಾಡಿ"},
-    "fake_app":{"English":"⚠️ Fake App! Do not install","Hindi":"⚠️ नकली ऐप! इंस्टॉल न करें","Kannada":"⚠️ ನಕಲಿ ಅಪ್ಲಿಕೇಶನ್! ಸ್ಥಾಪಿಸಬೇಡಿ"},
-    "financial_fraud":{"English":"⚠️ Financial Fraud! Be alert","Hindi":"⚠️ वित्तीय धोखाधड़ी! सतर्क रहें","Kannada":"⚠️ ಹಣಕಾಸು ಮೋಸ! ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"},
-    "spyware_adware":{"English":"⚠️ Spyware/Adware! Be careful","Hindi":"⚠️ स्पाईवेयर/एडवेयर! सावधान रहें","Kannada":"⚠️ ಸ್ಪೈವೇರ್/ಆಡ್ವೇರ್! ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"}
+    "phishing": {"English":"⚠️ Phishing! Avoid clicking unknown links",
+                 "Hindi":"⚠️ फ़िशिंग! अज्ञात लिंक पर क्लिक न करें",
+                 "Kannada":"⚠️ ಫಿಶಿಂಗ್! ಅಪರಿಚಿತ ಲಿಂಕ್ ಕ್ಲಿಕ್ ಮಾಡಬೇಡಿ"},
+
+    "malware": {"English":"⚠️ Malware detected! Do not install unknown files",
+                "Hindi":"⚠️ मैलवेयर! अज्ञात फ़ाइल इंस्टॉल न करें",
+                "Kannada":"⚠️ ಮಾಲ್ವೇರ್! ಅಪರಿಚಿತ ಫೈಲ್ ಸ್ಥಾಪಿಸಬೇಡಿ"},
+
+    "ransomware": {"English":"⚠️ Ransomware! Do not pay money",
+                   "Hindi":"⚠️ रैनसमवेयर! पैसे न दें",
+                   "Kannada":"⚠️ ರ್ಯಾನ್ಸಮ್‌ವೇರ್! ಹಣ ಕೊಡಬೇಡಿ"},
+
+    "social_engineering": {"English":"⚠️ Social Engineering! Stay alert",
+                           "Hindi":"⚠️ सोशल इंजीनियरिंग! सतर्क रहें",
+                           "Kannada":"⚠️ ಸಾಮಾಜಿಕ ಎಂಜಿನಿಯರಿಂಗ್! ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"},
+
+    "password_attack": {"English":"⚠️ Password attack! Use strong passwords",
+                        "Hindi":"⚠️ पासवर्ड हमला! मजबूत पासवर्ड रखें",
+                        "Kannada":"⚠️ ಪಾಸ್‌ವರ್ಡ್ ದಾಳಿ! ಬಲವಾದ ಪಾಸ್‌ವರ್ಡ್ ಬಳಸಿ"},
+
+    "otp_fraud": {"English":"⚠️ OTP Fraud! Never share your OTP",
+                  "Hindi":"⚠️ OTP धोखाधड़ी! OTP साझा न करें",
+                  "Kannada":"⚠️ OTP ಮೋಸ! OTP ಹಂಚಬೇಡಿ"},
+
+    "lottery_scam": {"English":"⚠️ Lottery Scam! Ignore fake prizes",
+                     "Hindi":"⚠️ लॉटरी धोखाधड़ी! नकली इनाम से बचें",
+                     "Kannada":"⚠️ ಲಾಟರಿ ಮೋಸ! ನಕಲಿ ಬಹುಮಾನವನ್ನು ನಿರ್ಲಕ್ಷ್ಯ ಮಾಡಿ"},
+
+    "fake_app": {"English":"⚠️ Fake App! Install only from trusted sources",
+                 "Hindi":"⚠️ नकली ऐप! केवल विश्वसनीय स्रोत से इंस्टॉल करें",
+                 "Kannada":"⚠️ ನಕಲಿ ಆಪ್! ವಿಶ್ವಾಸಾರ್ಹ ಮೂಲಗಳಿಂದ ಮಾತ್ರ ಸ್ಥಾಪಿಸಿ"},
+
+    "financial_fraud": {"English":"⚠️ Financial Fraud! Be careful with money transfers",
+                        "Hindi":"⚠️ वित्तीय धोखाधड़ी! पैसे ट्रांसफर में सावधानी रखें",
+                        "Kannada":"⚠️ ಹಣಕಾಸು ಮೋಸ! ಹಣ ವರ್ಗಾವಣೆಯಲ್ಲಿ ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"},
+
+    "spyware_adware": {"English":"⚠️ Spyware/Adware! Protect your privacy",
+                       "Hindi":"⚠️ स्पाईवेयर/एडवेयर! अपनी गोपनीयता सुरक्षित रखें",
+                       "Kannada":"⚠️ ಸ್ಪೈವೇರ್/ಆಡ್ವೇರ್! ನಿಮ್ಮ ಗೌಪ್ಯತೆ ಕಾಪಾಡಿ"}
 }
 
-# ---------- Navigation ----------
-st.sidebar.header("📌 Navigation")
-page = st.sidebar.radio("Go to:", ["Welcome","Cyber Attack Details","Demo / Analyze"])
+# ---------- Sidebar Navigation ----------
+st.sidebar.title("📌 Navigation")
+page = st.sidebar.radio("Go to:", ["Welcome", "Cyber Attack Details", "Demo / Analyze"])
 
 # ---------- Welcome Page ----------
-if page=="Welcome":
-    display_centered_image("welcome_image.jpeg", width=350)
+if page == "Welcome":
+    display_centered_image("welcome_image.jpeg", 350)
 
-    # Language selector BELOW image
-    lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
-    lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
-    lang_code = lang_map_code[lang]
+    lang = st.selectbox("🌐 Select Language", ["English", "Hindi", "Kannada"])
+    lang_code = {"English":"en","Hindi":"hi","Kannada":"kn"}[lang]
 
-    st.header("👋 Welcome to AI Cyber Safety Teacher")
-    welcome_msg = {
-        "English":"Welcome to AI Cyber Safety Teacher! Learn how to stay safe online.",
-        "Hindi":"AI साइबर सुरक्षा शिक्षक में आपका स्वागत है! ऑनलाइन सुरक्षित रहें।",
-        "Kannada":"AI ಸೈಬರ್ ಸೆಕ್ಯುರಿಟಿ ಟೀಚರ್‌ಗೆ ಸ್ವಾಗತ! ಆನ್‌ಲೈನ್ ಸುರಕ್ಷಿತವಾಗಿ ಇರಲು ಕಲಿಯಿರಿ."
+    st.title("👋 AI Cyber Safety Teacher")
+
+    msg = {
+        "English":"Learn how to stay safe online!",
+        "Hindi":"ऑनलाइन सुरक्षित रहना सीखें!",
+        "Kannada":"ಆನ್‌ಲೈನ್ ಸುರಕ್ಷಿತವಾಗಿರಲು ಕಲಿಯಿರಿ!"
     }
-    st.write(welcome_msg[lang])
-    speak_streamlit(welcome_msg[lang], lang_code=lang_code)
+
+    st.write(msg[lang])
+    speak_streamlit(msg[lang], lang_code)
 
 # ---------- Cyber Attack Details ----------
-elif page=="Cyber Attack Details":
-    display_centered_image("ai_teacher_logo.jpeg", width=250)
+elif page == "Cyber Attack Details":
+    display_centered_image("ai_teacher_logo.jpeg", 250)
 
     lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
-    lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
-    lang_code = lang_map_code[lang]
+    lang_code = {"English":"en","Hindi":"hi","Kannada":"kn"}[lang]
 
-    st.header("📌 Cyber Attack Types")
+    st.title("📚 Cyber Attack Types")
 
-    attack_details = {
-        "phishing": {
-            "English": "Messages trying to steal your passwords or personal info via fake links.",
-            "Hindi": "संदेश जो आपके पासवर्ड या व्यक्तिगत जानकारी को नकली लिंक के माध्यम से चुराने की कोशिश करते हैं।",
-            "Kannada": "ತಪ್ಪು ಲಿಂಕ್ ಮೂಲಕ ನಿಮ್ಮ ಪಾಸ್ವರ್ಡ್ ಅಥವಾ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ಕದಿಯಲು ಪ್ರಯತ್ನಿಸುವ ಸಂದೇಶಗಳು."
-        },
-        "malware": {
-            "English": "Software that harms your device or steals data.",
-            "Hindi": "सॉफ़्टवेयर जो आपके डिवाइस को नुकसान पहुंचाता है या डेटा चुराता है।",
-            "Kannada": "ನಿಮ್ಮ ಸಾಧನಕ್ಕೆ ಹಾನಿ ಮಾಡುವ ಅಥವಾ ಡೇಟಾವನ್ನು ಕದಿಯುವ ಸಾಫ್ಟ್‌ವೇರ್."
-        }
+    details = {
+        "phishing":"Fake links to steal data",
+        "malware":"Harmful software",
+        "ransomware":"Locks files for money",
+        "otp_fraud":"Steals OTP",
+        "lottery_scam":"Fake winnings",
+        "fake_app":"Malicious apps",
+        "financial_fraud":"Money scams",
+        "social_engineering":"Tricks people",
+        "password_attack":"Steals passwords",
+        "spyware_adware":"Tracks your activity"
     }
 
-    for key, desc_dict in attack_details.items():
-        st.write(f"• {key.title()}: {desc_dict[lang]}")
-        speak_streamlit(f"{key.title()}: {desc_dict[lang]}", lang_code=lang_code)
+    for k, v in details.items():
+        st.write(f"• {k}: {v}")
+        speak_streamlit(f"{k}: {v}", lang_code)
 
-# ---------- Demo / Analyze ----------
-elif page=="Demo / Analyze":
-    display_centered_image("ai_teacher_logo.jpeg", width=250)
+# ---------- Demo Page ----------
+elif page == "Demo / Analyze":
+    display_centered_image("ai_teacher_logo.jpeg", 250)
 
     lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
-    lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
-    lang_code = lang_map_code[lang]
+    lang_code = {"English":"en","Hindi":"hi","Kannada":"kn"}[lang]
 
-    st.header("🔍 Demo / Manual Message Analysis")
+    st.title("🔍 Analyze Message")
 
-    user_input = st.text_area("📩 Enter message / call content", height=150)
+    text = st.text_area("📩 Enter message", height=150)
 
     col1, col2 = st.columns(2)
-    with col1:
-        check = st.button("🔍 Analyze")
-    with col2:
-        clear = st.button("🧹 Clear")
+    analyze = col1.button("Analyze")
+    clear = col2.button("Clear")
 
     if clear:
-        st.experimental_rerun()
+        st.rerun()
 
-    if check:
-        if user_input.strip() == "":
-            st.warning("⚠️ Please enter some text")
-            speak_streamlit("Please enter some text to analyze.", lang_code=lang_code)
+    if analyze:
+        if text.strip() == "":
+            st.warning("Enter text")
+            speak_streamlit("Please enter text", lang_code)
         else:
-            category = predict_category(user_input)
-            feedback = feedback_dict.get(
-                category,
-                {"English":"Be cautious","Hindi":"सतर्क रहें","Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"}
-            )[lang]
+            category = predict_category(text)
+            feedback = feedback_dict.get(category,
+                        {"English":"Be cautious",
+                         "Hindi":"सतर्क रहें",
+                         "Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"})[lang]
 
             st.error(feedback)
-            speak_streamlit(feedback, lang_code=lang_code)
+            speak_streamlit(feedback, lang_code)
