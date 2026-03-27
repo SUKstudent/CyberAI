@@ -142,7 +142,6 @@ elif page=="Demo / Analyze":
         image = Image.open(uploaded_file)
         st.image(image, caption="Uploaded Screenshot")
         try:
-            # Auto set Windows Tesseract path
             import platform
             if platform.system() == "Windows":
                 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -153,11 +152,10 @@ elif page=="Demo / Analyze":
             else:
                 st.write("📄 Extracted text:", extracted_text)
 
-        except FileNotFoundError:
+        except (FileNotFoundError, pytesseract.pytesseract.TesseractNotFoundError):
             st.warning(
-                "⚠️ Tesseract OCR executable not found. "
-                "Please install Tesseract (https://github.com/tesseract-ocr/tesseract) "
-                "and make sure it is in your PATH."
+                "⚠️ Tesseract OCR not installed or not in PATH. "
+                "You can still type the message manually in the text area."
             )
             extracted_text = ""
         except Exception as e:
@@ -174,7 +172,6 @@ elif page=="Demo / Analyze":
         st.experimental_rerun()
 
     if check:
-        # Use text area if present, otherwise OCR text
         final_text = user_input if user_input.strip() != "" else extracted_text
 
         if final_text.strip() == "":
