@@ -5,7 +5,7 @@ import io
 from gtts import gTTS
 from PIL import Image
 import pytesseract
-from utils import scenarios  # keep your original utils import
+from utils import scenarios  # your original utils import
 
 # ---------- Function to display centered images ----------
 def display_centered_image(image_path, width=250):
@@ -48,9 +48,9 @@ feedback_dict = {
     "social_engineering":{"English":"Someone is trying to trick you. Do NOT trust easily.","Hindi":"कोई आपको धोखा देने की कोशिश कर रहा है। आसानी से विश्वास न करें।","Kannada":"ಯಾರೋ ನಿಮ್ಮನ್ನು ಮೋಸ ಮಾಡಲು ಪ್ರಯತ್ನಿಸುತ್ತಿದ್ದಾರೆ. ಸುಲಭವಾಗಿ ನಂಬಬೇಡಿ."},
     "password_attack":{"English":"Someone is trying to get your password. Keep it safe.","Hindi":"कोई आपका पासवर्ड लेने की कोशिश कर रहा है। इसे सुरक्षित रखें।","Kannada":"ಯಾರೋ ನಿಮ್ಮ ಪಾಸ್‌ವರ್ಡ್ ಪಡೆಯಲು ಪ್ರಯತ್ನಿಸುತ್ತಿದ್ದಾರೆ. ಸುರಕ್ಷಿತವಾಗಿರಿಸಿ."},
     "otp_fraud":{"English":"This message is asking for OTP. Do NOT share it.","Hindi":"यह OTP मांग रहा है। साझा न करें।","Kannada":"ಇದು OTP ಕೇಳುತ್ತಿದೆ. ಹಂಚಬೇಡಿ."},
-    "lottery_scam":{"English":"Fake prize message. Ignore it.","Hindi":"यह नकली इनाम है। अनदेखा करें।","Kannada":"ಇದು ನಕಲಿ ಬಹುಮಾನ. ನಿರ್ಲಕ್ಷ್ಯ ಮಾಡಿ."},
-    "fake_app":{"English":"This app is not safe. Do NOT install it.","Hindi":"यह ऐप सुरक्षित नहीं है। इसे इंस्टॉल न करें।","Kannada":"ಈ ಆಪ್ ಸುರಕ್ಷಿತವಲ್ಲ. ಇದನ್ನು ಸ್ಥಾಪಿಸಬೇಡಿ."},
-    "financial_fraud":{"English":"This message is trying to take your money. Be careful.","Hindi":"यह संदेश आपके पैसे लेने की कोशिश कर रहा है। सावधान रहें।","Kannada":"ಈ ಸಂದೇಶ ನಿಮ್ಮ ಹಣ ತೆಗೆದುಕೊಳ್ಳಲು ಪ್ರಯತ್ನಿಸುತ್ತದೆ. ಎಚ್ಚರಿಕೆ ವಹಿಸಿ."},
+    "lottery_scam":{"English":"Fake lottery messages claiming you won. Ignore them.","Hindi":"आप जीत गए हैं कहने वाले नकली लॉटरी संदेश। इन्हें अनदेखा करें।","Kannada":"ನೀವು ಗೆದ್ದೀರಿ ಎಂದು ಹೇಳುವ ನಕಲಿ ಲಾಟರಿ ಸಂದೇಶಗಳು. ನಿರ್ಲಕ್ಷ್ಯ ಮಾಡಿ."},
+    "fake_app":{"English":"This app is not safe. Do not install it.","Hindi":"यह ऐप सुरक्षित नहीं है। इसे इंस्टॉल न करें।","Kannada":"ಈ ಆಪ್ ಸುರಕ್ಷಿತವಲ್ಲ. ಸ್ಥಾಪಿಸಬೇಡಿ."},
+    "financial_fraud":{"English":"This message is trying to take your money. Be alert.","Hindi":"यह संदेश आपके पैसे लेने की कोशिश कर रहा है। सावधान रहें।","Kannada":"ಈ ಸಂದೇಶ ನಿಮ್ಮ ಹಣ ತೆಗೆದುಕೊಳ್ಳಲು ಪ್ರಯತ್ನಿಸುತ್ತದೆ. ಎಚ್ಚರಿಕೆ ವಹಿಸಿ."},
     "spyware_adware":{"English":"This may track your phone activity secretly. Be careful.","Hindi":"यह आपके फोन को गुप्त रूप से ट्रैक कर सकता है। सावधान रहें।","Kannada":"ಇದು ನಿಮ್ಮ ಫೋನ್ ಚಟುವಟಿಕೆಯನ್ನು ಗುಪ್ತವಾಗಿ ಟ್ರಾಕ್ ಮಾಡಬಹುದು. ಎಚ್ಚರಿಕೆ ವಹಿಸಿ."}
 }
 
@@ -86,20 +86,40 @@ elif page=="Cyber Attack Details":
     st.header("📌 Cyber Attack Types")
 
     attack_details = {
-        "phishing": {
-            "English": "Messages trying to steal your passwords or personal info via fake links.",
-            "Hindi": "संदेश जो आपके पासवर्ड या व्यक्तिगत जानकारी को नकली लिंक के माध्यम से चुराने की कोशिश करते हैं।",
-            "Kannada": "ತಪ್ಪು ಲಿಂಕ್ ಮೂಲಕ ನಿಮ್ಮ ಪಾಸ್ವರ್ಡ್ ಅಥವಾ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ಕದಿಯಲು ಪ್ರಯತ್ನಿಸುವ ಸಂದೇಶಗಳು."
-        },
-        "malware": {
-            "English": "Software that harms your device or steals data.",
-            "Hindi": "सॉफ़्टवेयर जो आपके डिवाइस को नुकसान पहुंचाता है या डेटा चुराता है।",
-            "Kannada": "ನಿಮ್ಮ ಸಾಧನಕ್ಕೆ ಹಾನಿ ಮಾಡುವ ಅಥವಾ ಡೇಟಾವನ್ನು ಕದಿಯುವ ಸಾಫ್ಟ್‌ವೇರ್."
-        }
+        "phishing": {"English": "Messages trying to steal your passwords or personal info via fake links.",
+                     "Hindi": "संदेश जो आपके पासवर्ड या व्यक्तिगत जानकारी को नकली लिंक के माध्यम से चुराने की कोशिश करते हैं।",
+                     "Kannada": "ತಪ್ಪು ಲಿಂಕ್ ಮೂಲಕ ನಿಮ್ಮ ಪಾಸ್ವರ್ಡ್ ಅಥವಾ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ಕದಿಯಲು ಪ್ರಯತ್ನಿಸುವ ಸಂದೇಶಗಳು."},
+        "malware": {"English": "Software that harms your device or steals data.",
+                    "Hindi": "सॉफ़्टवेयर जो आपके डिवाइस को नुकसान पहुंचाता है या डेटा चुराता है।",
+                    "Kannada": "ನಿಮ್ಮ ಸಾಧನಕ್ಕೆ ಹಾನಿ ಮಾಡುವ ಅಥವಾ ಡೇಟಾವನ್ನು ಕದಿಯುವ ಸಾಫ್ಟ್‌ವೇರ್."},
+        "ransomware": {"English": "Software that locks your files and demands money to unlock.",
+                       "Hindi": "सॉफ़्टवेयर जो आपकी फ़ाइलों को लॉक करता है और उन्हें अनलॉक करने के लिए पैसे मांगता है।",
+                       "Kannada": "ನಿಮ್ಮ ಫೈಲ್‌ಗಳನ್ನು ಲಾಕ್ ಮಾಡುವ ಮತ್ತು ಅನ್ಲಾಕ್ ಮಾಡಲು ಹಣ ಕೇಳುವ ಸಾಫ್ಟ್‌ವೇರ್."},
+        "social_engineering": {"English": "Tricks to manipulate you into revealing confidential information.",
+                               "Hindi": "आपसे गोपनीय जानकारी निकालने के लिए किया गया छल।",
+                               "Kannada": "ನಿಮ್ಮ ರಹಸ್ಯ ಮಾಹಿತಿಯನ್ನು ತಿಳಿಸಲು ಮಾಡುವ ಚತುರಾಟ."},
+        "password_attack": {"English": "Attempts to guess or steal your passwords.",
+                            "Hindi": "आपके पासवर्ड को अनुमान लगाने या चोरी करने का प्रयास।",
+                            "Kannada": "ನಿಮ್ಮ ಪಾಸ್‌ವರ್ಡ್ ಅನ್ನು ಊಹಿಸಲು ಅಥವಾ ಕದ್ದಲು ಪ್ರಯತ್ನ."},
+        "otp_fraud": {"English": "Fraudulent messages asking for your OTP. Never share it.",
+                      "Hindi": "OTP मांगने वाले धोखाधड़ी संदेश। इसे कभी साझा न करें।",
+                      "Kannada": "ನಕಲಿ ಸಂದೇಶಗಳು OTP ಕೇಳುತ್ತವೆ. ಹಂಚಬೇಡಿ."},
+        "lottery_scam": {"English": "Fake lottery messages claiming you won. Ignore them.",
+                         "Hindi": "आप जीत गए हैं कहने वाले नकली लॉटरी संदेश। इन्हें अनदेखा करें।",
+                         "Kannada": "ನೀವು ಗೆದ್ದೀರಿ ಎಂದು ಹೇಳುವ ನಕಲಿ ಲಾಟರಿ ಸಂದೇಶಗಳು. ನಿರ್ಲಕ್ಷ್ಯ ಮಾಡಿ."},
+        "fake_app": {"English": "Fake apps that may steal data or harm your phone. Do not install.",
+                     "Hindi": "नकली ऐप्स जो डेटा चुरा सकते हैं या फोन को नुकसान पहुँचा सकते हैं। इंस्टॉल न करें।",
+                     "Kannada": "ನಕಲಿ ಆಪ್‌ಗಳು ನಿಮ್ಮ ಡೇಟಾ ಕದಿಯಬಹುದು ಅಥವಾ ಫೋನ್‌ಗೆ ಹಾನಿ ಮಾಡಬಹುದು. ಸ್ಥಾಪಿಸಬೇಡಿ."},
+        "financial_fraud": {"English": "Attempts to steal your money or financial info.",
+                            "Hindi": "आपके पैसे या वित्तीय जानकारी को चोरी करने का प्रयास।",
+                            "Kannada": "ನಿಮ್ಮ ಹಣ ಅಥವಾ ಹಣಕಾಸು ಮಾಹಿತಿಯನ್ನು ಕದಿಯಲು ಪ್ರಯತ್ನ."},
+        "spyware_adware": {"English": "Software that secretly tracks your phone activity or shows unwanted ads.",
+                           "Hindi": "सॉफ़्टवेयर जो गुप्त रूप से आपके फ़ोन की गतिविधियों को ट्रैक करता है या अनचाहे विज्ञापन दिखाता है।",
+                           "Kannada": "ಸಾಫ್ಟ್‌ವೇರ್ ಇದು ಗುಪ್ತವಾಗಿ ನಿಮ್ಮ ಫೋನ್ ಚಟುವಟಿಕೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡುತ್ತದೆ ಅಥವಾ ಅನಗತ್ಯ ಜಾಹೀರಾತು ತೋರಿಸುತ್ತದೆ."}
     }
 
     for key, desc_dict in attack_details.items():
-        st.write(f"• {key.title()}: {desc_dict[lang]}")
+        st.write(f"• {key.replace('_',' ').title()}: {desc_dict[lang]}")
         speak_streamlit(desc_dict[lang], lang_code=lang_code)
 
 # ---------- Demo / Analyze ----------
