@@ -152,7 +152,7 @@ elif page=="Demo / Analyze":
         else:
             category = predict_category(final_text)
 
-            # Display category in selected language
+            # Display detected type name in selected language
             category_names = {
                 "phishing": {"English":"Phishing","Hindi":"फ़िशिंग","Kannada":"ಫಿಶಿಂಗ್"},
                 "malware": {"English":"Malware","Hindi":"मैलवेयर","Kannada":"ಮ್ಯಾಲ್ವೇರ್"},
@@ -166,9 +166,9 @@ elif page=="Demo / Analyze":
                 "spyware_adware": {"English":"Spyware / Adware","Hindi":"स्पायवेयर / एडवेयर","Kannada":"ಸ್ಪೈವೇರ್ / ಆಡ್ವೇರ್"}
             }
 
-            category_display = category_names.get(category, {"English":"Unknown","Hindi":"अज्ञात","Kannada":"ಅಜ್ಞಾನ"})
-            st.info(f"🛡️ Detected Cyber Attack Type: {category_display[lang]}")
-            speak_streamlit(f"Detected Cyber Attack Type: {category_display[lang]}", lang_code=lang_code)
+            type_name = category_names.get(category, {"English":"Unknown","Hindi":"अज्ञात","Kannada":"ಅಜ್ಞಾನ"})
+            st.info(f"🛡️ Detected Cyber Attack Type: {type_name[lang]}")
+            speak_streamlit(f"Detected Cyber Attack Type: {type_name[lang]}", lang_code=lang_code)
 
             # Display feedback
             feedback = feedback_dict.get(
