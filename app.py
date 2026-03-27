@@ -4,7 +4,6 @@ import joblib
 import io
 from gtts import gTTS
 from PIL import Image
-import pytesseract
 from utils import scenarios  # your original utils import
 
 # ---------- Function to display centered images ----------
@@ -132,35 +131,8 @@ elif page=="Demo / Analyze":
 
     st.header("🔍 Demo / Manual Message Analysis")
 
-    # Text input
+    # Text input only (no screenshot upload)
     user_input = st.text_area("📩 Enter message / call content", height=150)
-
-    # Screenshot upload (Streamlit-friendly OCR)
-    uploaded_file = st.file_uploader("📷 Upload screenshot (WhatsApp / Email)", type=["png","jpg","jpeg"])
-    extracted_text = ""
-    if uploaded_file:
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Screenshot")
-        try:
-            import platform
-            if platform.system() == "Windows":
-                pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-
-            extracted_text = pytesseract.image_to_string(image)
-            if extracted_text.strip() == "":
-                st.info("⚠️ OCR did not detect any text in the image.")
-            else:
-                st.write("📄 Extracted text:", extracted_text)
-
-        except (FileNotFoundError, pytesseract.pytesseract.TesseractNotFoundError):
-            st.warning(
-                "⚠️ Tesseract OCR not installed or not in PATH. "
-                "You can still type the message manually in the text area."
-            )
-            extracted_text = ""
-        except Exception as e:
-            st.warning(f"⚠️ Failed to extract text: {e}")
-            extracted_text = ""
 
     col1, col2 = st.columns(2)
     with col1:
@@ -172,9 +144,9 @@ elif page=="Demo / Analyze":
         st.experimental_rerun()
 
     if check:
-        final_text = user_input if user_input.strip() != "" else extracted_text
+        final_text = user_input.strip()
 
-        if final_text.strip() == "":
+        if final_text == "":
             st.warning("⚠️ Please enter some text")
             speak_streamlit("Please enter some text to analyze.", lang_code=lang_code)
         else:
