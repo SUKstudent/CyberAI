@@ -5,3 +5,4 @@ joblib
 gTTS
 Pillow
 pytesseract
+opencv-python-headless
