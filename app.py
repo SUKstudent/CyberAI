@@ -51,7 +51,7 @@ feedback_dict = {
     "lottery_scam":{"English":"Fake lottery messages claiming you won. Ignore them.","Hindi":"आप जीत गए हैं कहने वाले नकली लॉटरी संदेश। इन्हें अनदेखा करें।","Kannada":"ನೀವು ಗೆದ್ದೀರಿ ಎಂದು ಹೇಳುವ ನಕಲಿ ಲಾಟರಿ ಸಂದೇಶಗಳು. ನಿರ್ಲಕ್ಷ್ಯ ಮಾಡಿ."},
     "fake_app":{"English":"This app is not safe. Do not install it.","Hindi":"यह ऐप सुरक्षित नहीं है। इसे इंस्टॉल न करें।","Kannada":"ಈ ಆಪ್ ಸುರಕ್ಷಿತವಲ್ಲ. ಸ್ಥಾಪಿಸಬೇಡಿ."},
     "financial_fraud":{"English":"This message is trying to take your money. Be alert.","Hindi":"यह संदेश आपके पैसे लेने की कोशिश कर रहा है। सावधान रहें।","Kannada":"ಈ ಸಂದೇಶ ನಿಮ್ಮ ಹಣ ತೆಗೆದುಕೊಳ್ಳಲು ಪ್ರಯತ್ನಿಸುತ್ತದೆ. ಎಚ್ಚರಿಕೆ ವಹಿಸಿ."},
-    "spyware_adware":{"English":"This may track your phone activity secretly. Be careful.","Hindi":"यह आपके फोन को गुप्त रूप से ट्रैक कर सकता है। सावधान रहें।","Kannada":"ಇದು ನಿಮ್ಮ ಫೋನ್ ಚಟುವಟಿಕೆಯನ್ನು ಗುಪ್ತವಾಗಿ ಟ್ರಾಕ್ ಮಾಡಬಹುದು. ಎಚ್ಚರಿಕೆ ವಹಿಸಿ."}
+    "spyware_adware":{"English":"This may track your phone activity secretly. Be careful.","Hindi":"यह आपके फोन को गुप्त रूप से ट्रैक कर सकता है। सावधान रहें।","Kannada":"ಇದು ನಿಮ್ಮ ಫೋನ್ ಚಟುವಟಿಕೆಯನ್ನು ಗುಪ್ತವಾಗಿ ಟ್ರ್ಯಾಕ್ ಮಾಡಬಹುದು. ಎಚ್ಚರಿಕೆ ವಹಿಸಿ."}
 }
 
 # ---------- Navigation ----------
@@ -144,8 +144,9 @@ elif page=="Demo / Analyze":
         try:
             extracted_text = pytesseract.image_to_string(image)
             st.write("📄 Extracted text:", extracted_text)
-        except Exception as e:
-            st.warning(f"Failed to extract text: {e}")
+        except Exception:
+            st.warning("Failed to extract text: tesseract is not installed or it's not in your PATH. "
+                       "See README file for more information.")
 
     col1, col2 = st.columns(2)
     with col1:
