@@ -135,17 +135,24 @@ elif page=="Demo / Analyze":
     # Text input
     user_input = st.text_area("📩 Enter message / call content", height=150)
 
-    # Screenshot upload
+    # Screenshot upload (UPDATED SECTION)
     uploaded_file = st.file_uploader("📷 Upload screenshot (WhatsApp / Email)", type=["png","jpg","jpeg"])
     extracted_text = ""
+
     if uploaded_file:
         image = Image.open(uploaded_file)
         st.image(image, caption="Uploaded Screenshot")
+
         try:
             extracted_text = pytesseract.image_to_string(image)
-            st.write("📄 Extracted text:", extracted_text)
-        except Exception as e:
-            st.warning(f"Failed to extract text: {e}")
+
+            if extracted_text.strip() == "":
+                st.warning("⚠️ No readable text found in the image. Please try a clearer image or type manually.")
+            else:
+                st.write("📄 Extracted text:", extracted_text)
+
+        except Exception:
+            st.warning("⚠️ Unable to read text from the image. Please type the message manually below.")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -157,7 +164,6 @@ elif page=="Demo / Analyze":
         st.experimental_rerun()
 
     if check:
-        # Use text area if present, otherwise OCR text
         final_text = user_input if user_input.strip() != "" else extracted_text
 
         if final_text.strip() == "":
@@ -171,5 +177,4 @@ elif page=="Demo / Analyze":
             )[lang]
 
             st.error(feedback)
-            # Speak only the description in selected language
             speak_streamlit(feedback, lang_code=lang_code)
