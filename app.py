@@ -5,10 +5,8 @@ from gtts import gTTS
 from PIL import Image
 from utils import scenarios
 
-# NEW IMPORTS (for OCR)
-import pytesseract
-import cv2
-import numpy as np
+# ---------- Page Config (NEW - UI Improve) ----------
+st.set_page_config(page_title="AI Cyber Safety Teacher", page_icon="🛡️", layout="centered")
 
 # ---------- Function to display centered images ----------
 def display_centered_image(image_path, width=250):
@@ -27,18 +25,6 @@ def speak_streamlit(text, lang_code="en"):
     tts.write_to_fp(mp3_fp)
     mp3_fp.seek(0)
     st.audio(mp3_fp, format="audio/mp3")
-
-# ---------- OCR Function ----------
-def extract_text_from_image(uploaded_file):
-    try:
-        image = Image.open(uploaded_file)
-        img_array = np.array(image)
-        gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
-        text = pytesseract.image_to_string(gray)
-        return text.strip()
-    except Exception as e:
-        st.error(f"OCR Error: {e}")
-        return ""
 
 # ---------- Load model ----------
 model_path = "cyber_model.pkl"
@@ -69,59 +55,60 @@ feedback_dict = {
     "spyware_adware":{"English":"This may track your phone activity secretly. Be careful.","Hindi":"यह आपके फोन को गुप्त रूप से ट्रैक कर सकता है। सावधान रहें।","Kannada":"ಇದು ನಿಮ್ಮ ಫೋನ್ ಚಟುವಟಿಕೆಯನ್ನು ಗುಪ್ತವಾಗಿ ಟ್ರ್ಯಾಕ್ ಮಾಡಬಹುದು. ಎಚ್ಚರಿಕೆ ವಹಿಸಿ."}
 }
 
-# ---------- Navigation ----------
-st.sidebar.header("📌 Navigation")
-page = st.sidebar.radio("Go to:", ["Welcome","Cyber Attack Details","Demo / Analyze"])
+# ---------- Sidebar ----------
+st.sidebar.title("🛡️ Cyber Safety Teacher")
+st.sidebar.markdown("Stay safe from online scams 🚨")
+page = st.sidebar.radio("Navigate", ["Welcome","Cyber Attack Details","Demo / Analyze"])
 
 # ---------- Welcome Page ----------
 if page=="Welcome":
-    display_centered_image("welcome_image.jpeg", width=350)
+    display_centered_image("welcome_image.jpeg", width=320)
 
     lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
     lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
     lang_code = lang_map_code[lang]
 
-    st.header("👋 Welcome to AI Cyber Safety Teacher")
+    st.markdown("## 👋 Welcome to AI Cyber Safety Teacher")
+    st.success("Learn how to stay safe from cyber attacks in a simple way.")
+
     welcome_msg = {
         "English":"Welcome to AI Cyber Safety Teacher! Learn how to stay safe online.",
         "Hindi":"AI साइबर सुरक्षा शिक्षक में आपका स्वागत है! ऑनलाइन सुरक्षित रहें।",
         "Kannada":"AI ಸೈಬರ್ ಸೆಕ್ಯುರಿಟಿ ಟೀಚರ್‌ಗೆ ಸ್ವಾಗತ! ಆನ್‌ಲೈನ್ ಸುರಕ್ಷಿತವಾಗಿ ಇರಲು ಕಲಿಯಿರಿ."
     }
+
     st.write(welcome_msg[lang])
     speak_streamlit(welcome_msg[lang], lang_code=lang_code)
 
 # ---------- Cyber Attack Details ----------
 elif page=="Cyber Attack Details":
-    display_centered_image("ai_teacher_logo.jpeg", width=250)
+    display_centered_image("ai_teacher_logo.jpeg", width=220)
 
     lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
-    lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
-    lang_code = lang_map_code[lang]
+    lang_code = {"English":"en","Hindi":"hi","Kannada":"kn"}[lang]
 
-    st.header("📌 Cyber Attack Types")
+    st.markdown("## 📌 Cyber Attack Types")
 
     attack_details = {
-        "phishing":{"English":"Messages trying to steal your passwords or personal info via fake links.","Hindi":"संदेश जो आपके पासवर्ड या व्यक्तिगत जानकारी को नकली लिंक के माध्यम से चुराने की कोशिश करते हैं।","Kannada":"ತಪ್ಪು ಲಿಂಕ್ ಮೂಲಕ ನಿಮ್ಮ ಪಾಸ್ವರ್ಡ್ ಅಥವಾ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ಕದಿಯಲು ಪ್ರಯತ್ನಿಸುವ ಸಂದೇಶಗಳು."},
-        "malware":{"English":"Software that harms your device or steals data.","Hindi":"सॉफ़्टवेयर जो आपके डिवाइस को नुकसान पहुंचाता है या डेटा चुराता है।","Kannada":"ನಿಮ್ಮ ಸಾಧನಕ್ಕೆ ಹಾನಿ ಮಾಡುವ ಅಥವಾ ಡೇಟಾವನ್ನು ಕದಿಯುವ ಸಾಫ್ಟ್‌ವೇರ್."},
-        "ransomware":{"English":"Software that locks your files and demands money.","Hindi":"सॉफ़्टवेयर जो आपकी फ़ाइलों को लॉक करता है और पैसे मांगता है।","Kannada":"ನಿಮ್ಮ ಫೈಲ್‌ಗಳನ್ನು ಲಾಕ್ ಮಾಡಿ ಹಣ ಕೇಳುವ ಸಾಫ್ಟ್‌ವೇರ್."}
+        "phishing":"Fake links to steal your data",
+        "malware":"Software that harms your device",
+        "ransomware":"Locks files and demands money"
     }
 
-    for key, desc_dict in attack_details.items():
-        st.write(f"• {key.replace('_',' ').title()}: {desc_dict[lang]}")
-        speak_streamlit(desc_dict[lang], lang_code=lang_code)
+    for key, desc in attack_details.items():
+        st.info(f"**{key.title()}** → {desc}")
+        speak_streamlit(desc, lang_code=lang_code)
 
-# ---------- Demo / Analyze ----------
+# ---------- Demo ----------
 elif page=="Demo / Analyze":
-    display_centered_image("ai_teacher_logo.jpeg", width=250)
+    display_centered_image("ai_teacher_logo.jpeg", width=220)
 
     lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
-    lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
-    lang_code = lang_map_code[lang]
+    lang_code = {"English":"en","Hindi":"hi","Kannada":"kn"}[lang]
 
-    st.header("🔍 Demo / Manual Message Analysis")
+    st.markdown("## 🔍 Analyze Suspicious Message")
 
-    user_input = st.text_area("📩 Enter message / call content", height=150)
-    uploaded_image = st.file_uploader("🖼️ Upload Screenshot (optional)", type=["png","jpg","jpeg"])
+    user_input = st.text_area("📩 Paste message here", height=150)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -135,17 +122,13 @@ elif page=="Demo / Analyze":
     if check:
         final_text = user_input.strip()
 
-        if uploaded_image is not None:
-            extracted_text = extract_text_from_image(uploaded_image)
-            st.write("📄 Extracted Text:", extracted_text)
-            if extracted_text:
-                final_text = extracted_text
-
         if final_text == "":
-            st.warning("⚠️ Please enter some text or upload image")
+            st.warning("⚠️ Please enter a message")
+            speak_streamlit("Please enter a message", lang_code=lang_code)
         else:
             category = predict_category(final_text)
-            st.info(f"🛡️ Detected Cyber Attack Type: {category}")
+
+            st.success(f"🛡️ Detected: {category.upper()}")
 
             feedback = feedback_dict.get(category, {"English":"Be cautious"})[lang]
             st.error(feedback)
