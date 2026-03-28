@@ -1,20 +1,16 @@
+# app.py
 import streamlit as st
 import joblib
 import io
 from gtts import gTTS
 from PIL import Image
-from utils import scenarios
-
-# ---------- Page Config (NEW - UI Improve) ----------
-st.set_page_config(page_title="AI Cyber Safety Teacher", page_icon="🛡️", layout="centered")
 
 # ---------- Function to display centered images ----------
 def display_centered_image(image_path, width=250):
     try:
-        img = Image.open(image_path)
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
-            st.image(img, width=width)
+            st.image(image_path, width=width)  # works for GIF also
     except Exception as e:
         st.warning(f"Image not found or failed to load: {e}")
 
@@ -43,33 +39,31 @@ def predict_category(text):
 
 # ---------- Feedback dictionary ----------
 feedback_dict = {
-    "phishing":{"English":"This message contains a suspicious link. Do NOT click it.","Hindi":"इस संदेश में संदिग्ध लिंक है। इसे क्लिक न करें।","Kannada":"ಈ ಸಂದೇಶದಲ್ಲಿ ಅನುಮಾನಾಸ್ಪದ ಲಿಂಕ್ ಇದೆ. ಕ್ಲಿಕ್ ಮಾಡಬೇಡಿ."},
-    "malware":{"English":"This file or link can harm your phone. Do NOT open it.","Hindi":"यह फ़ाइल या लिंक आपके फोन को नुकसान पहुंचा सकता है। इसे न खोलें।","Kannada":"ಈ ಫೈಲ್ ಅಥವಾ ಲಿಂಕ್ ನಿಮ್ಮ ಫೋನ್‌ಗೆ ಹಾನಿ ಮಾಡಬಹುದು. ತೆರೆಯಬೇಡಿ."},
-    "ransomware":{"English":"Your device may be locked for money. Do NOT pay anything.","Hindi":"आपका डिवाइस पैसे के लिए लॉक किया जा सकता है। पैसे न दें।","Kannada":"ನಿಮ್ಮ ಸಾಧನವನ್ನು ಹಣಕ್ಕಾಗಿ ಲಾಕ್ ಮಾಡಬಹುದು. ಹಣ ಕೊಡಬೇಡಿ."},
-    "social_engineering":{"English":"Someone is trying to trick you. Do NOT trust easily.","Hindi":"कोई आपको धोखा देने की कोशिश कर रहा है। आसानी से विश्वास न करें।","Kannada":"ಯಾರೋ ನಿಮ್ಮನ್ನು ಮೋಸ ಮಾಡಲು ಪ್ರಯತ್ನಿಸುತ್ತಿದ್ದಾರೆ. ಸುಲಭವಾಗಿ ನಂಬಬೇಡಿ."},
-    "password_attack":{"English":"Someone is trying to get your password. Keep it safe.","Hindi":"कोई आपका पासवर्ड लेने की कोशिश कर रहा है। इसे सुरक्षित रखें।","Kannada":"ಯಾರೋ ನಿಮ್ಮ ಪಾಸ್‌ವರ್ಡ್ ಪಡೆಯಲು ಪ್ರಯತ್ನಿಸುತ್ತಿದ್ದಾರೆ. ಸುರಕ್ಷಿತವಾಗಿರಿಸಿ."},
-    "otp_fraud":{"English":"This message is asking for OTP. Do NOT share it.","Hindi":"यह OTP मांग रहा है। साझा न करें।","Kannada":"ಇದು OTP ಕೇಳುತ್ತಿದೆ. ಹಂಚಬೇಡಿ."},
-    "lottery_scam":{"English":"Fake lottery messages claiming you won. Ignore them.","Hindi":"आप जीत गए हैं कहने वाले नकली लॉटरी संदेश। इन्हें अनदेखा करें।","Kannada":"ನೀವು ಗೆದ್ದೀರಿ ಎಂದು ಹೇಳುವ ನಕಲಿ ಲಾಟರಿ ಸಂದೇಶಗಳು. ನಿರ್ಲಕ್ಷ್ಯ ಮಾಡಿ."},
-    "fake_app":{"English":"This app is not safe. Do not install it.","Hindi":"यह ऐप सुरक्षित नहीं है। इसे इंस्टॉल न करें।","Kannada":"ಈ ಆಪ್ ಸುರಕ್ಷಿತವಲ್ಲ. ಸ್ಥಾಪಿಸಬೇಡಿ."},
-    "financial_fraud":{"English":"This message is trying to take your money. Be alert.","Hindi":"यह संदेश आपके पैसे लेने की कोशिश कर रहा है। सावधान रहें।","Kannada":"ಈ ಸಂದೇಶ ನಿಮ್ಮ ಹಣ ತೆಗೆದುಕೊಳ್ಳಲು ಪ್ರಯತ್ನಿಸುತ್ತದೆ. ಎಚ್ಚರಿಕೆ ವಹಿಸಿ."},
-    "spyware_adware":{"English":"This may track your phone activity secretly. Be careful.","Hindi":"यह आपके फोन को गुप्त रूप से ट्रैक कर सकता है। सावधान रहें।","Kannada":"ಇದು ನಿಮ್ಮ ಫೋನ್ ಚಟುವಟಿಕೆಯನ್ನು ಗುಪ್ತವಾಗಿ ಟ್ರ್ಯಾಕ್ ಮಾಡಬಹುದು. ಎಚ್ಚರಿಕೆ ವಹಿಸಿ."}
+    "phishing":{"English":"⚠️ Phishing! Avoid links","Hindi":"⚠️ फ़िशिंग! लिंक से बचें","Kannada":"⚠️ ಫಿಶಿಂಗ್! ಲಿಂಕ್ ತಪ್ಪಿಸಿ"},
+    "malware":{"English":"⚠️ Malware detected! Do not install","Hindi":"⚠️ मैलवेयर! इंस्टॉल न करें","Kannada":"⚠️ ಮಾಲ್ವೇರ್ ಕಂಡುಬಂದಿದೆ! ಸ್ಥಾಪಿಸಬೇಡಿ"},
+    "ransomware":{"English":"⚠️ Ransomware! Do not pay","Hindi":"⚠️ रैनसमवेयर! भुगतान न करें","Kannada":"⚠️ ರ್ಯಾನ್ಸಮ್‌ವೇರ್! ಪಾವತಿ ಮಾಡಬೇಡಿ"},
+    "social_engineering":{"English":"⚠️ Social Engineering! Be alert","Hindi":"⚠️ सोशल इंजिनियरिंग! सतर्क रहें","Kannada":"⚠️ ಸಾಮಾಜಿಕ ಎಂಜಿನಿಯರಿಂಗ್! ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"},
+    "password_attack":{"English":"⚠️ Password attack! Keep strong","Hindi":"⚠️ पासवर्ड हमला! मजबूत रखें","Kannada":"⚠️ ಪಾಸ್‌ವರ್ಡ್ ದಾಳಿ! ಬಲವಾಗಿ ಇಡಿ"},
+    "otp_fraud":{"English":"⚠️ OTP Fraud! Never share","Hindi":"⚠️ OTP धोखाधड़ी! साझा न करें","Kannada":"⚠️ OTP ಮೋಸ! ಹಂಚಬೇಡಿ"},
+    "lottery_scam":{"English":"⚠️ Lottery Scam! Ignore","Hindi":"⚠️ लॉटरी धोखाधड़ी! अनदेखा करें","Kannada":"⚠️ ಲಾಟರಿ ಮೋಸ! ನಿರ್ಲಕ್ಷ್ಯ ಮಾಡಿ"},
+    "fake_app":{"English":"⚠️ Fake App! Do not install","Hindi":"⚠️ नकली ऐप! इंस्टॉल न करें","Kannada":"⚠️ ನಕಲಿ ಅಪ್ಲಿಕೇಶನ್! ಸ್ಥಾಪಿಸಬೇಡಿ"},
+    "financial_fraud":{"English":"⚠️ Financial Fraud! Be alert","Hindi":"⚠️ वित्तीय धोखाधड़ी! सतर्क रहें","Kannada":"⚠️ ಹಣಕಾಸು ಮೋಸ! ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"},
+    "spyware_adware":{"English":"⚠️ Spyware/Adware! Be careful","Hindi":"⚠️ स्पाईवेयर/एडवेयर! सावधान रहें","Kannada":"⚠️ ಸ್ಪೈವೇರ್/ಆಡ್ವೇರ್! ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"}
 }
 
-# ---------- Sidebar ----------
-st.sidebar.title("🛡️ Cyber Safety Teacher")
-st.sidebar.markdown("Stay safe from online scams 🚨")
-page = st.sidebar.radio("Navigate", ["Welcome","Cyber Attack Details","Demo / Analyze"])
+# ---------- Navigation ----------
+st.sidebar.header("📌 Navigation")
+page = st.sidebar.radio("Go to:", ["Welcome","Cyber Attack Details","Demo / Analyze"])
 
 # ---------- Welcome Page ----------
 if page=="Welcome":
-    display_centered_image("welcome_image.jpeg", width=320)
+    display_centered_image("welcome_animation.gif", width=400)  # 🎬 GIF animation
 
     lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
     lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
     lang_code = lang_map_code[lang]
 
-    st.markdown("## 👋 Welcome to AI Cyber Safety Teacher")
-    st.success("Learn how to stay safe from cyber attacks in a simple way.")
+    st.header("👋 Welcome to AI Cyber Safety Teacher")
 
     welcome_msg = {
         "English":"Welcome to AI Cyber Safety Teacher! Learn how to stay safe online.",
@@ -82,54 +76,35 @@ if page=="Welcome":
 
 # ---------- Cyber Attack Details ----------
 elif page=="Cyber Attack Details":
-    display_centered_image("ai_teacher_logo.jpeg", width=220)
+    display_centered_image("ai_teacher_logo.jpeg", width=250)
 
     lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
-    lang_code = {"English":"en","Hindi":"hi","Kannada":"kn"}[lang]
+    lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
+    lang_code = lang_map_code[lang]
 
-    st.markdown("## 📌 Cyber Attack Types")
+    st.header("📌 Cyber Attack Types")
 
-    attack_details = {
-        "phishing":"Fake links to steal your data",
-        "malware":"Software that harms your device",
-        "ransomware":"Locks files and demands money"
-    }
-
-    for key, desc in attack_details.items():
-        st.info(f"**{key.title()}** → {desc}")
-        speak_streamlit(desc, lang_code=lang_code)
+    st.write("• Phishing: Messages trying to steal personal info")
+    st.write("• Malware: Harmful software")
+    st.write("• Ransomware: Locks files for money")
 
 # ---------- Demo ----------
 elif page=="Demo / Analyze":
-    display_centered_image("ai_teacher_logo.jpeg", width=220)
+    display_centered_image("ai_teacher_logo.jpeg", width=250)
 
     lang = st.selectbox("🌐 Select Language", ["English","Hindi","Kannada"])
-    lang_code = {"English":"en","Hindi":"hi","Kannada":"kn"}[lang]
+    lang_map_code = {"English":"en","Hindi":"hi","Kannada":"kn"}
+    lang_code = lang_map_code[lang]
 
-    st.markdown("## 🔍 Analyze Suspicious Message")
+    st.header("🔍 Analyze Message")
 
-    user_input = st.text_area("📩 Paste message here", height=150)
+    user_input = st.text_area("📩 Enter message", height=150)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        check = st.button("🔍 Analyze")
-    with col2:
-        clear = st.button("🧹 Clear")
-
-    if clear:
-        st.rerun()
-
-    if check:
-        final_text = user_input.strip()
-
-        if final_text == "":
-            st.warning("⚠️ Please enter a message")
-            speak_streamlit("Please enter a message", lang_code=lang_code)
+    if st.button("🔍 Analyze"):
+        if user_input.strip()=="":
+            st.warning("Enter text")
         else:
-            category = predict_category(final_text)
-
-            st.success(f"🛡️ Detected: {category.upper()}")
-
+            category = predict_category(user_input)
             feedback = feedback_dict.get(category, {"English":"Be cautious"})[lang]
             st.error(feedback)
             speak_streamlit(feedback, lang_code=lang_code)
