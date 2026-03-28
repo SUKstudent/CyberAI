@@ -1,9 +1,8 @@
-streamlit
-scikit-learn
-pandas
-joblib
-gTTS
-Pillow
-pytesseract
-opencv-python-headless
-speech recognition
+streamlit==1.26.0
+scikit-learn==1.3.0
+pandas==2.1.1
+joblib==1.3.2
+gTTS==2.3.2
+Pillow==10.0.1
+opencv-python-headless==4.7.0.72
+SpeechRecognition==3.11.0
