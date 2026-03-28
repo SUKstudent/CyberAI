@@ -1,10 +1,14 @@
-# app.py
 import streamlit as st
 import joblib
 import io
 from gtts import gTTS
 from PIL import Image
-from utils import scenarios  # your original utils import
+from utils import scenarios
+
+# NEW IMPORTS (for OCR)
+import pytesseract
+import cv2
+import numpy as np
 
 # ---------- Function to display centered images ----------
 def display_centered_image(image_path, width=250):
@@ -23,6 +27,18 @@ def speak_streamlit(text, lang_code="en"):
     tts.write_to_fp(mp3_fp)
     mp3_fp.seek(0)
     st.audio(mp3_fp, format="audio/mp3")
+
+# ---------- OCR Function ----------
+def extract_text_from_image(uploaded_file):
+    try:
+        image = Image.open(uploaded_file)
+        img_array = np.array(image)
+        gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
+        text = pytesseract.image_to_string(gray)
+        return text.strip()
+    except Exception as e:
+        st.error(f"OCR Error: {e}")
+        return ""
 
 # ---------- Load model ----------
 model_path = "cyber_model.pkl"
@@ -85,36 +101,9 @@ elif page=="Cyber Attack Details":
     st.header("📌 Cyber Attack Types")
 
     attack_details = {
-        "phishing": {"English": "Messages trying to steal your passwords or personal info via fake links.",
-                     "Hindi": "संदेश जो आपके पासवर्ड या व्यक्तिगत जानकारी को नकली लिंक के माध्यम से चुराने की कोशिश करते हैं।",
-                     "Kannada": "ತಪ್ಪು ಲಿಂಕ್ ಮೂಲಕ ನಿಮ್ಮ ಪಾಸ್ವರ್ಡ್ ಅಥವಾ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ಕದಿಯಲು ಪ್ರಯತ್ನಿಸುವ ಸಂದೇಶಗಳು."},
-        "malware": {"English": "Software that harms your device or steals data.",
-                    "Hindi": "सॉफ़्टवेयर जो आपके डिवाइस को नुकसान पहुंचाता है या डेटा चुराता है।",
-                    "Kannada": "ನಿಮ್ಮ ಸಾಧನಕ್ಕೆ ಹಾನಿ ಮಾಡುವ ಅಥವಾ ಡೇಟಾವನ್ನು ಕದಿಯುವ ಸಾಫ್ಟ್‌ವೇರ್."},
-        "ransomware": {"English": "Software that locks your files and demands money to unlock.",
-                       "Hindi": "सॉफ़्टवेयर जो आपकी फ़ाइलों को लॉक करता है और उन्हें अनलॉक करने के लिए पैसे मांगता है।",
-                       "Kannada": "ನಿಮ್ಮ ಫೈಲ್‌ಗಳನ್ನು ಲಾಕ್ ಮಾಡುವ ಮತ್ತು ಅನ್ಲಾಕ್ ಮಾಡಲು ಹಣ ಕೇಳುವ ಸಾಫ್ಟ್‌ವೇರ್."},
-        "social_engineering": {"English": "Tricks to manipulate you into revealing confidential information.",
-                               "Hindi": "आपसे गोपनीय जानकारी निकालने के लिए किया गया छल।",
-                               "Kannada": "ನಿಮ್ಮ ರಹಸ್ಯ ಮಾಹಿತಿಯನ್ನು ತಿಳಿಸಲು ಮಾಡುವ ಚತುರಾಟ."},
-        "password_attack": {"English": "Attempts to guess or steal your passwords.",
-                            "Hindi": "आपके पासवर्ड को अनुमान लगाने या चोरी करने का प्रयास।",
-                            "Kannada": "ನಿಮ್ಮ ಪಾಸ್‌ವರ್ಡ್ ಅನ್ನು ಊಹಿಸಲು ಅಥವಾ ಕದ್ದಲು ಪ್ರಯತ್ನ."},
-        "otp_fraud": {"English": "Fraudulent messages asking for your OTP. Never share it.",
-                      "Hindi": "OTP मांगने वाले धोखाधड़ी संदेश। इसे कभी साझा न करें।",
-                      "Kannada": "ನಕಲಿ ಸಂದೇಶಗಳು OTP ಕೇಳುತ್ತವೆ. ಹಂಚಬೇಡಿ."},
-        "lottery_scam": {"English": "Fake lottery messages claiming you won. Ignore them.",
-                         "Hindi": "आप जीत गए हैं कहने वाले नकली लॉटरी संदेश। इन्हें अनदेखा करें।",
-                         "Kannada": "ನೀವು ಗೆದ್ದೀರಿ ಎಂದು ಹೇಳುವ ನಕಲಿ ಲಾಟರಿ ಸಂದೇಶಗಳು. ನಿರ್ಲಕ್ಷ್ಯ ಮಾಡಿ."},
-        "fake_app": {"English": "Fake apps that may steal data or harm your phone. Do not install.",
-                     "Hindi": "नकली ऐप्स जो डेटा चुरा सकते हैं या फोन को नुकसान पहुँचा सकते हैं। इंस्टॉल न करें।",
-                     "Kannada": "ನಕಲಿ ಆಪ್‌ಗಳು ನಿಮ್ಮ ಡೇಟಾ ಕದಿಯಬಹುದು ಅಥವಾ ಫೋನ್‌ಗೆ ಹಾನಿ ಮಾಡಬಹುದು. ಸ್ಥಾಪಿಸಬೇಡಿ."},
-        "financial_fraud": {"English": "Attempts to steal your money or financial info.",
-                            "Hindi": "आपके पैसे या वित्तीय जानकारी को चोरी करने का प्रयास।",
-                            "Kannada": "ನಿಮ್ಮ ಹಣ ಅಥವಾ ಹಣಕಾಸು ಮಾಹಿತಿಯನ್ನು ಕದಿಯಲು ಪ್ರಯತ್ನ."},
-        "spyware_adware": {"English": "Software that secretly tracks your phone activity or shows unwanted ads.",
-                           "Hindi": "सॉफ़्टवेयर जो गुप्त रूप से आपके फ़ोन की गतिविधियों को ट्रैक करता है या अनचाहे विज्ञापन दिखाता है।",
-                           "Kannada": "ಸಾಫ್ಟ್‌ವೇರ್ ಇದು ಗುಪ್ತವಾಗಿ ನಿಮ್ಮ ಫೋನ್ ಚಟುವಟಿಕೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡುತ್ತದೆ ಅಥವಾ ಅನಗತ್ಯ ಜಾಹೀರಾತು ತೋರಿಸುತ್ತದೆ."}
+        "phishing":{"English":"Messages trying to steal your passwords or personal info via fake links.","Hindi":"संदेश जो आपके पासवर्ड या व्यक्तिगत जानकारी को नकली लिंक के माध्यम से चुराने की कोशिश करते हैं।","Kannada":"ತಪ್ಪು ಲಿಂಕ್ ಮೂಲಕ ನಿಮ್ಮ ಪಾಸ್ವರ್ಡ್ ಅಥವಾ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ಕದಿಯಲು ಪ್ರಯತ್ನಿಸುವ ಸಂದೇಶಗಳು."},
+        "malware":{"English":"Software that harms your device or steals data.","Hindi":"सॉफ़्टवेयर जो आपके डिवाइस को नुकसान पहुंचाता है या डेटा चुराता है।","Kannada":"ನಿಮ್ಮ ಸಾಧನಕ್ಕೆ ಹಾನಿ ಮಾಡುವ ಅಥವಾ ಡೇಟಾವನ್ನು ಕದಿಯುವ ಸಾಫ್ಟ್‌ವೇರ್."},
+        "ransomware":{"English":"Software that locks your files and demands money.","Hindi":"सॉफ़्टवेयर जो आपकी फ़ाइलों को लॉक करता है और पैसे मांगता है।","Kannada":"ನಿಮ್ಮ ಫೈಲ್‌ಗಳನ್ನು ಲಾಕ್ ಮಾಡಿ ಹಣ ಕೇಳುವ ಸಾಫ್ಟ್‌ವೇರ್."}
     }
 
     for key, desc_dict in attack_details.items():
@@ -131,8 +120,8 @@ elif page=="Demo / Analyze":
 
     st.header("🔍 Demo / Manual Message Analysis")
 
-    # Text input only (no screenshot upload)
     user_input = st.text_area("📩 Enter message / call content", height=150)
+    uploaded_image = st.file_uploader("🖼️ Upload Screenshot (optional)", type=["png","jpg","jpeg"])
 
     col1, col2 = st.columns(2)
     with col1:
@@ -141,40 +130,23 @@ elif page=="Demo / Analyze":
         clear = st.button("🧹 Clear")
 
     if clear:
-        st.experimental_rerun()
+        st.rerun()
 
     if check:
         final_text = user_input.strip()
 
+        if uploaded_image is not None:
+            extracted_text = extract_text_from_image(uploaded_image)
+            st.write("📄 Extracted Text:", extracted_text)
+            if extracted_text:
+                final_text = extracted_text
+
         if final_text == "":
-            st.warning("⚠️ Please enter some text")
-            speak_streamlit("Please enter some text to analyze.", lang_code=lang_code)
+            st.warning("⚠️ Please enter some text or upload image")
         else:
             category = predict_category(final_text)
+            st.info(f"🛡️ Detected Cyber Attack Type: {category}")
 
-            # Display detected type name in selected language
-            category_names = {
-                "phishing": {"English":"Phishing","Hindi":"फ़िशिंग","Kannada":"ಫಿಶಿಂಗ್"},
-                "malware": {"English":"Malware","Hindi":"मैलवेयर","Kannada":"ಮ್ಯಾಲ್ವೇರ್"},
-                "ransomware": {"English":"Ransomware","Hindi":"रैनसमवेयर","Kannada":"ರೆನ್ಸಮ್‌ವೇರ್"},
-                "social_engineering": {"English":"Social Engineering","Hindi":"सोशल इंजीनियरिंग","Kannada":"ಸೋಶಿಯಲ್ ಇಂಜಿನಿಯರಿಂಗ್"},
-                "password_attack": {"English":"Password Attack","Hindi":"पासवर्ड हमला","Kannada":"ಪಾಸ್ವರ್ಡ್ ದಾಳಿ"},
-                "otp_fraud": {"English":"OTP Fraud","Hindi":"OTP धोखा","Kannada":"OTP ಮೋಸ"},
-                "lottery_scam": {"English":"Lottery Scam","Hindi":"लॉटरी घोटाला","Kannada":"ಲಾಟರಿ ಮೋಸ"},
-                "fake_app": {"English":"Fake App","Hindi":"नकली ऐप","Kannada":"ನಕಲಿ ಆಪ್"},
-                "financial_fraud": {"English":"Financial Fraud","Hindi":"वित्तीय धोखा","Kannada":"ಹಣಕಾಸು ಮೋಸ"},
-                "spyware_adware": {"English":"Spyware / Adware","Hindi":"स्पायवेयर / एडवेयर","Kannada":"ಸ್ಪೈವೇರ್ / ಆಡ್ವೇರ್"}
-            }
-
-            type_name = category_names.get(category, {"English":"Unknown","Hindi":"अज्ञात","Kannada":"ಅಜ್ಞಾನ"})
-            st.info(f"🛡️ Detected Cyber Attack Type: {type_name[lang]}")
-            speak_streamlit(f"Detected Cyber Attack Type: {type_name[lang]}", lang_code=lang_code)
-
-            # Display feedback
-            feedback = feedback_dict.get(
-                category,
-                {"English":"Be cautious","Hindi":"सतर्क रहें","Kannada":"ಎಚ್ಚರಿಕೆ ವಹಿಸಿ"}
-            )[lang]
-
+            feedback = feedback_dict.get(category, {"English":"Be cautious"})[lang]
             st.error(feedback)
             speak_streamlit(feedback, lang_code=lang_code)
